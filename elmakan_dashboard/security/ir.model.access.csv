@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+id_hero_section_elmakan,name_hero_section_elmakan,model_hero_section_elmakan,,1,1,1,1
+id_about_elmakan,name_about_elmakan,model_about_elmakan,,1,1,1,1
+
+
+
