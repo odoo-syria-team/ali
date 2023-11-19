@@ -8,7 +8,13 @@
     "depends": [],
     "data": [
         'security/ir.model.access.csv',
-             "views/hero_section.xml"],
+             "views/hero_section.xml",
+             "views/category.xml",
+             "views/contact.xml",
+             "views/brand.xml",
+             
+             
+             ],
 
     'installable': True,
     'application': True,

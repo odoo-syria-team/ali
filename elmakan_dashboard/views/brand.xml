@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<odoo>
+
+    <record id="brand_list_view_elmakan" model="ir.ui.view">
+        <field name="name">brand List</field>
+        <field name="model">brand.elmakan</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="title" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="user_brand_form_view_elmakan" model="ir.ui.view">
+        <field name="name">brand Form</field>
+        <field name="model">brand.elmakan</field>
+        <field name="arch" type="xml">
+            <form string="brand">
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="image" />
+                            <field name="image_url" />
+                        </group>
+                        <group>
+                            <field name="title" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="Content" string="Content">
+                            <field name="content_ids">
+                                <tree editable="bottom">
+                                    <field name='text' />
+                                    <field name="title" />
+                                    <field name='image' />
+                                    <field name="image_url" />
+                                </tree>
+                            </field>
+
+                        </page>
+                        <page name="gallery" string="Gallery">
+                            <field name="gallery_ids">
+                                <tree editable="bottom">
+                                    <field name='text' />
+                                    <field name='image' />
+                                    <field name="image_url" />
+                                </tree>
+                            </field>
+
+                        </page>
+                        <page name="description" string="Description">
+                            <field name="description_ids">
+                                <tree editable="bottom">
+                                    <field name='text' />
+                                    <field name="title" />
+                                    <field name='description' />
+                                </tree>
+
+                            </field>
+
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="brand_action_window_elmakan" model="ir.actions.act_window">
+        <field name="name">Brand</field>
+        <field name="res_model">brand.elmakan</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first user token Record! </p>
+        </field>
+    </record>
+
+    <menuitem id="brand_menu_window_elmakan"
+        name='Brand'
+        parent='almakaan_root'
+        action="brand_action_window_elmakan"
+        sequence="12" />
+
+</odoo>

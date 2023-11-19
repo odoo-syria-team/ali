@@ -1,6 +1,12 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 id_hero_section_elmakan,name_hero_section_elmakan,model_hero_section_elmakan,,1,1,1,1
 id_about_elmakan,name_about_elmakan,model_about_elmakan,,1,1,1,1
-
-
-
+id_category_elmakan,name_category_elmakan,model_category_elmakan,,1,1,1,1
+id_category_content_elmakan,name_category_content_elmakan,model_category_content_elmakan,,1,1,1,1
+id_category_gallery_elmakan,name_category_gallery_elmakan,model_category_gallery_elmakan,,1,1,1,1
+id_category_boxes_elmakan,name_category_boxes_elmakan,model_category_boxes_elmakan,,1,1,1,1
+id_brand_elmakan,name_brand_elmakan,model_brand_elmakan,,1,1,1,1
+id_description_brand_elmakan,name_description_brand_elmakan,model_description_brand_elmakan,,1,1,1,1
+id_content_brand_elmakan,name_content_brand_elmakan,model_content_brand_elmakan,,1,1,1,1
+id_gallery_brand_elmakan,name_gallery_brand_elmakan,model_gallery_brand_elmakan,,1,1,1,1
+id_contact_elmakan,name_contact_elmakan,model_contact_elmakan,,1,1,1,1

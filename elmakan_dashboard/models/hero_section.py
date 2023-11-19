@@ -16,7 +16,6 @@ class HeroSection(models.Model):
         print('base_url' , base_url)
         for obj in self:
             if obj.image:
-                print("base_url + '/web/image?' + 'model=images.fanoos&id=' + str(obj.id) + '&field=image'" , base_url + '/web/image?' + 'model=images.fanoos&id=' + str(obj.id) + '&field=image')
-                obj.image_url= base_url + '/web/image?' + 'model=images.fanoos&id=' + str(obj.id) + '&field=image'
+                obj.image_url= base_url + '/web/image?' + 'model=hero.section.elmakan&id=' + str(obj.id) + '&field=image'
             else:
                 obj.image_url=''
