@@ -12,13 +12,13 @@ class StockPicking(models.Model):
         for rec in self:
             if rec.picking_id:
                 if rec.picking_id.origin.startswith("P"):
-                    po = self.env['purchase.order'].search([('name' , '=' , rec.picking_id.id)])
-                    pol = self.env['purchase.order.line'].search([('id' , '=' , po.id),('product_id' , '=' , rec.product_id.id)])
+                    po = self.env['purchase.order'].search([('name' , '=' , rec.picking_id.name)])
+                    pol = self.env['purchase.order.line'].search([('id' , '=' , po.id),('product_id' , '=' , rec.product_id.name)])
                     rec.price = pol.price_subtotal
                     
                 elif rec.picking_id.origin.startswith("S"):
-                    po = self.env['sale.order'].search([('name' , '=' , rec.picking_id.id)])
-                    pol = self.env['sale.order.line'].search([('id' , '=' , po.id),('product_id' , '=' , rec.product_id.id)])
+                    po = self.env['sale.order'].search([('name' , '=' , rec.picking_id.name)])
+                    pol = self.env['sale.order.line'].search([('id' , '=' , po.id),('product_id' , '=' , rec.product_id.name)])
                     rec.price = pol.price_subtotal
                 else:
                     rec.price = 0
