@@ -1,3 +1,7 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 id_niki_store_price,name_niki_store_price,model_niki_store_price,,1,1,1,1
+id_document_nikki,name_document_nikki,model_document_nikki,,1,1,1,1
+id_category_nikki,name_category_nikki,model_category_nikki,,1,1,1,1
+
+
 

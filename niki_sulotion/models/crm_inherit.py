@@ -11,7 +11,7 @@ class CRMLead(models.Model):
         todos = {   
         'res_id': result.id,    
         'res_model_id': self.env['ir.model'].sudo().search([('model', '=', 'crm.lead')]).id,
-        'user_id': result.partner_id,
+        'user_id': 2,
         'summary': 'New opportunity added ',
         'note': '',
         'activity_type_id': 4,

@@ -8,9 +8,10 @@
     "license": "LGPL-3",
     "author": "ACSONE SA/NV,Odoo Community Association (OCA)",
     "website": "",
-    "depends": ["stock"],
+    "depends": ["stock","crm","contacts"],
     "data": [
             "security/ir.model.access.csv",
-             "views/moves_history.xml"
+             "views/moves_history.xml",
+             "views/document.xml"
             ],
 }
