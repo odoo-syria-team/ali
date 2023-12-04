@@ -15,10 +15,9 @@ import socket
 from os import path
 import random
 import string
-from os import environ
-from dotenv import load_dotenv
+
 _logger = logging.getLogger(__name__)
-load_dotenv()
+
 
 from pathlib import Path
 
@@ -26,10 +25,10 @@ from pathlib import Path
 
 class Auth(http.Controller):
     
-    url = os.getenv('URL')
-    db = os.getenv('db')
-    username = os.getenv('username')
-    password = os.getenv('password')
+    url = 'https://gtec-security1.odoo.com'
+    db = 'gtec-security1'
+    username ='marketing@gtecsecurity.co.uk'
+    password = 'GTECWeb$ite'
     
     
     
