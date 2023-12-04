@@ -10,14 +10,11 @@ import os
 import requests
 from odoo.http import request ,Response
 # from odoo.http import JsonRequest
-import jwt
 import re
-import werkzeug.wrappers
 import socket
 from os import path
-from pathlib import Path 
-import pathlib
-from telesign.messaging import MessagingClient
+import random
+import string
 from os import environ
 from dotenv import load_dotenv
 _logger = logging.getLogger(__name__)
@@ -28,6 +25,18 @@ from pathlib import Path
 
 
 class Auth(http.Controller):
+    def generate_random_key(length=32):
+        """
+        Generate a random key without using secrets.
+
+        :param length: Length of the key (default is 32 characters).
+        :type length: int
+        :return: A randomly generated key.
+        :rtype: str
+        """
+        characters = string.ascii_letters + string.digits
+        key = ''.join(random.choice(characters) for _ in range(length))
+        return key
     url = os.getenv('URL')
     db = os.getenv('db')
     username = os.getenv('username')
@@ -85,9 +94,8 @@ class Auth(http.Controller):
         username_validation = self._validation(username)
         password_validation = self._pass_validate(password)
         email_validation = self.check_email(email)
-
         if username_validation == False:
-            response = json.dumps({"data":[],'message': 'يرجى إدخال الاسم '})
+            response = json.dumps({"data":[],'message': 'Please add your name'})
             return Response(
             response, status=422,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
@@ -106,16 +114,8 @@ class Auth(http.Controller):
             response, status=422,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
-
-        
-        
-        
         uid = False
-        
-        
-        
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
-        
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         if not uid:
             
@@ -137,36 +137,69 @@ class Auth(http.Controller):
            
             if user_id :
                 date_now = str(datetime.today())
-            
-                # payload = {
-                #     'id': user_id,
-                #     'username': username,
-                #     'password': password ,
-                #     'timestamp' : date_now,}
-                # SECRET='ali.ammar'
-                # enc = jwt.encode(payload, SECRET) 
-                # is_token =models.execute_kw(self.db, uid, self.password, 'user.token', 'search_count', [[['user_id' , '=', user_id]]])  
-                
-                
-                # create_user_verification = models.execute_kw(self.db, uid, self.password, 'user.verification', 'create', [{'user_id': user_id, 'type' : '2','is_valid' : True}])
-              
-              
-
-                # image_path=user[0]['image_path']
+                key = self.generate_random_key()
+                user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
                 user_details = {"id":user_id,"username" :username,"email":email,"timestamp":date_now}
                 
-                # if is_token:
-                #     models.execute_kw(self.db, uid, self.password, 'user.token', 'write', [['user_id' , '=' , user_id], {'token': enc}])
-                # else :
-                #     models.execute_kw(self.db, uid, self.password, 'user.token', 'create', [{'user_id': user_id, 'token': enc }])
-                # user_token='{"data" :{user:{"%s"} ,"token" : {"%s"} }'%(user_details , enc)
-                # response =json.dumps({user_token})
-                # user_ver_code = request.env['user.verification'].with_user(2).search([('id','=',create_user_verification)])
-                # user_ver_code =models.execute_kw(self.db, uid, self.password,'user.verification', 'search_read', [[['id' , '=' , create_user_verification]] ],{'fields': ['code','is_valid']})
                 
               
-                response=json.dumps({"data":{"user":user_details}})
+                response=json.dumps({"data":{"user":user_details,'token' :key}})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
             )
+
+    @http.route('/auth/log_in', auth="public",csrf=False, website=True, methods=['POST'])
+    def log_in(self,idd= None, **kw):               
+            body =json.loads(request.httprequest.data)
+            uid = False
+            login = body['email']
+            message = ''
+            password = body['password']
+                
+                
+            sucess_login=False
+            
+            common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+            uid = common.authenticate(self.db,self.username, self.password, {})
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+            check_archive_profile = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['login' , '=' , login]]], {
+                                        'fields': ['name']})
+            if check_archive_profile != []:
+                 models.execute_kw(self.db, uid, self.password, 'res.users', 'write', [[check_archive_profile[0]['id']], {'active': True}])
+                 
+            user_id = common.authenticate(self.db,login, password, {})
+            if user_id==False :
+                    response=json.dumps({"data":[],'message': 'رقم الهاتف او كلمة المرور خاطئ'})
+                    return Response( response, status=402,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                    )
+            
+            
+            elif user_id:
+                user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]], {
+                                        'fields': ['name']})
+                
+                key = self.generate_random_key()
+                user_token_data = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_name' , '=' , user_id]]], {
+                                        'fields': ['x_studio_user_name']})
+                if user_token_data:
+
+                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'write', [[user_token_data[0]['id']], {'x_studio_user_token': key}])
+                else:
+                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
+
+                username = user_data[0]['name']
+                date_now = str(datetime.today())
+                user_details = [{"id":user_id,"username" :username,"email":login ,"timestamp":date_now}]
+                response=json.dumps({"data":{"user":user_details[0],"token":key}, 'message':message})
+                return Response( response,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+            else : 
+                user_details = [{"id":user_id,"username" :username,"phone":login,"timestamp":date_now}]
+                response=json.dumps({"data":{"user":user_details[0] ,"token":key}, 'message':message}) 
+                return Response( response, 
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)] 
+                )
+    
