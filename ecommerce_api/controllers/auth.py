@@ -25,18 +25,7 @@ from pathlib import Path
 
 
 class Auth(http.Controller):
-    def generate_random_key(length=32):
-        """
-        Generate a random key without using secrets.
-
-        :param length: Length of the key (default is 32 characters).
-        :type length: int
-        :return: A randomly generated key.
-        :rtype: str
-        """
-        characters = string.ascii_letters + string.digits
-        key = ''.join(random.choice(characters) for _ in range(length))
-        return key
+    
     url = os.getenv('URL')
     db = os.getenv('db')
     username = os.getenv('username')
@@ -72,7 +61,20 @@ class Auth(http.Controller):
             return False
         else:
             pass
-    
+
+
+    def generate_random_key(self,length=32):
+        """
+        Generate a random key without using secrets.
+
+        :param length: Length of the key (default is 32 characters).
+        :type length: int
+        :return: A randomly generated key.
+        :rtype: str
+        """
+        characters = string.ascii_letters + string.digits
+        key = ''.join(random.choice(characters) for _ in range(length))
+        return key
     def check_email(self,email):
         regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         # pass the regular expression
@@ -138,7 +140,7 @@ class Auth(http.Controller):
             if user_id :
                 date_now = str(datetime.today())
                 key = self.generate_random_key()
-                user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
+                user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_name' :key,'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
                 user_details = {"id":user_id,"username" :username,"email":email,"timestamp":date_now}
                 
                 
@@ -185,9 +187,9 @@ class Auth(http.Controller):
                                         'fields': ['x_studio_user_name']})
                 if user_token_data:
 
-                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'write', [[user_token_data[0]['id']], {'x_studio_user_token': key}])
+                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'write', [[user_token_data[0]['id']], {'x_name' :key ,'x_studio_user_token': key}])
                 else:
-                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
+                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_name' :key,'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
 
                 username = user_data[0]['name']
                 date_now = str(datetime.today())
