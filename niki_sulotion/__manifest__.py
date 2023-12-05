@@ -6,12 +6,18 @@
     "summary": """ """,
     "version": "16.0.1.0.0",
     "license": "LGPL-3",
-    "author": "ACSONE SA/NV,Odoo Community Association (OCA)",
+    "author": "",
     "website": "",
-    "depends": ["stock","crm","contacts"],
+    "depends": ["stock","crm","contacts",'sale','purchase'],
     "data": [
             "security/ir.model.access.csv",
              "views/moves_history.xml",
-             "views/document.xml"
+             "views/sale_order.xml",
+             "wizard/input_product.xml",
+             "views/input_vendor.xml",
+             "views/output_vendor.xml",
+             "views/document.xml",
+             "views/res_oartner_inherit.xml",
+             "wizard/output_vendor.xml"
             ],
 }
