@@ -306,3 +306,36 @@ class Partners(http.Controller):
             return Response(
                 response, status=500,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
+
+    @http.route('/data/aboutUS', auth="public",csrf=False, website=True, methods=['GET'])
+    def get_aboutUS(self):
+        result=[]
+        headers = request.httprequest.headers 
+        try:
+            partner_obj=request.env['about.elmakan'].sudo().search([],limit=1)
+            if partner_obj:
+                #get_title=lambda x:x.containt_ar if language=='ar' else x.containt_en
+                #date=lambda x:str(x) if x!=False else "0000-00-00"
+                check_str=lambda x:x if x else ''
+                check_image=lambda image:image if image else ''
+                for item in partner_obj:
+                    result.append({
+                        'id':item.id,
+                        'text':check_str(item.text),
+                        'video':check_str(item.video)                
+                    })
+            
+            
+            if result:
+                result=result[0]
+            else:
+                result={}
+            response = json.dumps({"data":result,'message' : 'About US'}) 
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
+        except Exception as e:
+            response = json.dumps({'data':[],'message':str(e)}) 
+            return Response(
+                response, status=500,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])

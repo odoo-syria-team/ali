@@ -12,6 +12,7 @@
              "views/category.xml",
              "views/contact.xml",
              "views/brand.xml",
+             'views/about_us.xml'
              
              
              ],
