@@ -21,7 +21,7 @@ class AboutContentAlmakaan(models.Model):
     about_id = fields.Many2one('about.elmakan')
     image = fields.Binary(string='Image')
     image_url = fields.Char("image url", compute='_compute_image_url')
-    text = fields.Html(string='Text',default='')
+    text = fields.Text(string='Text',default='')
     title = fields.Char(string='title',default='')
     @api.depends('image')
     def _compute_image_url(self):
