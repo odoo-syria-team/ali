@@ -156,7 +156,7 @@ class Partners(http.Controller):
     #             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
 
-    @http.route('/data/categories/<int:category_id>', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/data/categories/<int:category_id>', auth="public",csrf=False, cors='*',website=True, methods=['GET'])
     def get_category_by_id(self,category_id=None): 
         result=[]
         headers = request.httprequest.headers
@@ -220,7 +220,7 @@ class Partners(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
 
-    @http.route('/data/partners', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/data/partners', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_all_partners(self):
         result=[]
         headers = request.httprequest.headers 
@@ -249,7 +249,7 @@ class Partners(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
 
-    @http.route('/data/contact', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/data/contact', auth="public",csrf=False, cors='*',website=True, methods=['GET'])
     def get_all_contact(self):
         result=[]
         headers = request.httprequest.headers 
@@ -278,7 +278,7 @@ class Partners(http.Controller):
                 response, status=500,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
         
-    @http.route('/data/hero_section', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/data/hero_section', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_hero_section(self):
         result=[]
         headers = request.httprequest.headers 
@@ -340,7 +340,7 @@ class Partners(http.Controller):
     #             response, status=500,
     #             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
-    @http.route('/Brand', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/Brand', auth="public",csrf=False, cors='*',website=True, methods=['GET'])
     def get_all_brands(self): 
         result=[]
         headers = request.httprequest.headers
@@ -383,7 +383,7 @@ class Partners(http.Controller):
                 response, status=500,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
-    @http.route('/BrandBySlug/<string:slug>', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/BrandBySlug/<string:slug>', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_BrandBySlug(self,slug): 
         result=[]
         headers = request.httprequest.headers
@@ -427,7 +427,7 @@ class Partners(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
 
-    @http.route('/Gatergories', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/Gatergories', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_all_Gatergories(self): 
         result=[]
         headers = request.httprequest.headers
@@ -455,7 +455,7 @@ class Partners(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])                
 
 
-    @http.route('/CategoriesBySlug/<string:slug>', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/CategoriesBySlug/<string:slug>', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_CategoriesBySlug(self,slug): 
         result=[]
         headers = request.httprequest.headers
@@ -496,7 +496,7 @@ class Partners(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
 
 
-    @http.route('/About', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/About', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_About(self): 
         result=[]
         headers = request.httprequest.headers
@@ -546,7 +546,7 @@ class Partners(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]) 
 
 
-    @http.route('/Home', auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/Home', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_Home(self): 
         result=[]
         headers = request.httprequest.headers
@@ -587,6 +587,54 @@ class Partners(http.Controller):
             else:
                 result={}    
             response = json.dumps({"Home":result,'message' : 'Home Details'}) 
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
+
+        except Exception as e:
+            response = json.dumps({'data':{},'message':str(e)}) 
+            return Response(
+                response, status=500,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])                        
+
+
+
+
+    @http.route('/Label', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
+    def get_Label(self): 
+        result=[]
+        headers = request.httprequest.headers
+        try:
+            label_obj=request.env['labelcontent.elmakan'].sudo().search([],limit=1)
+            check_list=lambda x:x[0] if x else {} 
+            check_str=lambda x:x if x else ""
+            for item in label_obj:
+                result.append({
+                    'title':check_str(item.title),
+                    'text':check_str(item.text),
+                    'content':[{
+                        'title':check_str(content.title),
+                        'image':check_str(content.image_url),
+                        'text':check_str(content.text)
+                    } for content in item.content_ids],
+                    'slider':[{
+                        'title':check_str(slider.title),
+                        'image':check_str(slider.image_url),
+                        'text':check_str(slider.text)
+                    } for slider in item.slider_ids],
+                    'boxes':[{
+                        'title':check_str(boxes.title),
+                        'text':check_str(boxes.text)
+                    } for boxes in item.box_ids],
+
+                    
+                        
+                })
+            if result:
+                result=result[0]
+            else:
+                result={}    
+            response = json.dumps({"labelContent":result,'message' : 'Label Details'}) 
             return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
