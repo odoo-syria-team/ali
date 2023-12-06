@@ -1,19 +1,20 @@
-from odoo import models,api, fields,_
+from odoo import models, api, fields, _
 import re
 import os
 import time
-import base64 
+import base64
 from odoo.exceptions import ValidationError
+
 
 class InputNiki(models.TransientModel):
     _name = 'input.product.niki'
     _description = " "
 
-    user_id=fields.Many2one('res.partner' ,string='Vendor' ,required = True)
-    
+    user_id = fields.Many2one('res.partner', string='Vendor', required=True)
+
     def button_show_tree_view(self):
         self.ensure_one()
-        
+
         self.env['purchase.order'].get_vendor_products(self.user_id)
         action = {
             'type': 'ir.actions.act_window',
@@ -24,16 +25,17 @@ class InputNiki(models.TransientModel):
             'context': dict(self.env.context),
         }
         return action
-    
+
+
 class OutputNiki(models.TransientModel):
     _name = 'output.product.niki'
     _description = " "
 
-    user_id=fields.Many2one('res.partner' ,string='Customer' ,required = True)
-    
+    user_id = fields.Many2one('res.partner', string='Customer', required=True)
+
     def button_show_tree_view(self):
         self.ensure_one()
-        
+
         self.env['sale.order'].get_vendor_products(self.user_id)
         action = {
             'type': 'ir.actions.act_window',
@@ -44,4 +46,3 @@ class OutputNiki(models.TransientModel):
             'context': dict(self.env.context),
         }
         return action
-    

@@ -29,7 +29,7 @@
 
                     </group>
                     <footer>
-                        <button name="button_show_tree_view" type='object' string='Print'
+                        <button name="button_show_tree_view" type='object' string='Search'
                             class='btn-primary' />
                         <button string='Cancel' class='btn-secondary' special='cancel' />
                     </footer>
