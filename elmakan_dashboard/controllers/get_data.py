@@ -456,7 +456,7 @@ class Partners(http.Controller):
 
 
     @http.route('/CategoriesBySlug/<string:slug>', auth="public",csrf=False, website=True, methods=['GET'])
-    def get_BrandBySlug(self,slug): 
+    def get_CategoriesBySlug(self,slug): 
         result=[]
         headers = request.httprequest.headers
         try:
