@@ -6,6 +6,7 @@ class HeroSection(models.Model):
     _name = 'hero.section.elmakan'
     _description = "this module is for hero.section"
 
+    about_id = fields.Many2one('about.elmakan')
     title=fields.Html(string='Title',required = True)
     image = fields.Binary(string='Image')
     image_url = fields.Char("image url", compute='_compute_image_url')

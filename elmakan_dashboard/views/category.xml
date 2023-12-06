@@ -8,6 +8,7 @@
             <tree>
                 <field name="text" />
                 <field name="title" />
+                <field name="slug" />
             </tree>
         </field>
     </record>
@@ -27,6 +28,7 @@
                         </group>
                         <group>
                             <field name="title" />
+                            <field name="slug" />
                         </group>
                     </group>
                     <notebook>
@@ -53,9 +55,13 @@
                         </page>
                         <page name="Boxes" string="Boxes">
                             <field name="boxes_ids">
+                            <tree editable="bottom">
+                                <field name='title' />
+                                <field name='text' />
+                                <!-- <field name='image_url'/> -->
+                            </tree>
                             </field>
-                            <field name='text' />
-                            <field name="title" />
+                            
                         </page>
                     </notebook>
                 </sheet>
