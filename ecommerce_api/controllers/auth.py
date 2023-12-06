@@ -171,7 +171,7 @@ class Auth(http.Controller):
                  
             user_id = common.authenticate(self.db,login, password, {})
             if user_id==False :
-                    response=json.dumps({"data":[],'message': 'رقم الهاتف او كلمة المرور خاطئ'})
+                    response=json.dumps({"data":[],'message': 'Email or Password is incorrect'})
                     return Response( response, status=402,
                     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                     )
