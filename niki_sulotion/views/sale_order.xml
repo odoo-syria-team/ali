@@ -12,6 +12,27 @@
             </field>
         </record>
 
+        <record id="sale_order_hide_fields_1_niki" model="ir.ui.view">
+            <field name="name">sale_order_hide_fields_niki</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="product_supplierinfo_for_customer_sale.view_order_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//form//tree//field[@name='product_customer_code']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+        <record id="sale_order_hide_fields_2_niki" model="ir.ui.view">
+            <field name="name">sale_order_hide_fields_niki</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="odoo_sale_order_line_views.sale_order_line_product_view_form" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']//tree//field[@name='order_line_image']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+
 
     </data>
 </odoo>
