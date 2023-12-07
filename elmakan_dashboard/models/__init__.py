@@ -5,3 +5,6 @@ from . import contact_boxes
 from . import brand
 from . import home
 from . import label_content
+from . import feature
+from . import client
+from . import contact_us

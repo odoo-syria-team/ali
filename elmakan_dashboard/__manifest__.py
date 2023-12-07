@@ -16,6 +16,9 @@
              'views/brand_slider.xml',
              'views/home.xml',
              'views/label_content.xml',
+             'views/feature.xml',
+             'views/client.xml',
+             'views/contact_us.xml'
              
              ],
 

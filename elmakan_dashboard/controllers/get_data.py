@@ -3,9 +3,13 @@ import json
 from odoo import http                           
 from odoo.http import request,Response          
 import requests    
-
-
+# import smtplib
+# from email.message import EmailMessage
+# import smtplib
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
 class Partners(http.Controller):
+    
     # @http.route('/data/brands', auth="public",csrf=False, website=True, methods=['GET'])
     # def get_all_brands(self,**kw): 
     #     result=[]
@@ -572,7 +576,7 @@ class Partners(http.Controller):
                         "slug": check_str(feature.slug)
                         }
                     for feature in item.features_ids],
-                    "contact-boxes": [
+                    "contact_us": [
                         {
                         "title": check_str(content.title),
                         "text": check_str(content.text),
@@ -643,4 +647,251 @@ class Partners(http.Controller):
             response = json.dumps({'data':{},'message':str(e)}) 
             return Response(
                 response, status=500,
-                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])                        
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])  
+
+    @http.route('/<string:slug>', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
+    def get_feature_by_slug(self,slug): 
+        result=[]
+        headers = request.httprequest.headers
+        try:
+            feature_obj=request.env['feature.elmakan'].sudo().search([('slug','=',slug)])
+            check_list=lambda x:x[0] if x else {} 
+            check_str=lambda x:x if x else ""
+            for item in feature_obj:
+                result.append({
+                    'title':check_str(item.title),
+                    'text':check_str(item.text),
+                    'content':[{
+                        'text':check_str(content.text),
+                        'title':check_str(content.title),
+                        'link':check_str(content.link),
+                        'image':check_str(content.image_url),
+                        
+                    } for content in item.content_ids],
+                    
+                    
+                        
+                })
+            if result:
+                result=result[0]
+            else:
+                result={}    
+            response = json.dumps({"data":result,'message' : f' {slug} Details'}) 
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
+
+        except Exception as e:
+            response = json.dumps({'data':{},'message':str(e)}) 
+            return Response(
+                response, status=500,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
+
+
+    @http.route('/client', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
+    def get_client(self): 
+        result=[]
+        headers = request.httprequest.headers
+        try:
+            client_obj=request.env['client.elmakan'].sudo().search([],limit=1)
+            check_list=lambda x:x[0] if x else {} 
+            check_str=lambda x:x if x else ""
+            for item in client_obj:
+                result.append({
+                    'title':check_str(item.title),
+                    'text':check_str(item.text),
+                    'companies':[{
+                        'key':check_str(companies.key),
+                        'value':check_str(companies.value),
+                        
+                    } for companies in item.company_ids],
+                    
+                    
+                        
+                })
+            if result:
+                result=result[0]
+            else:
+                result={}    
+            response = json.dumps({"client":result,'message' : f' Client Details'}) 
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
+
+        except Exception as e:
+            response = json.dumps({'data':{},'message':str(e)}) 
+            return Response(
+                response, status=500,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])  
+
+
+    @http.route('/form/contact_us', auth="public",csrf=False,cors='*', website=True, methods=['POST'])
+    def post_form_contact_us(self,**kw): 
+        result=[]
+        headers = request.httprequest.headers
+        try:
+            contact_obj=request.env['contact.us.elmakan'].sudo().search([],limit=1)
+            if contact_obj:
+                pass
+            else:
+                response = json.dumps({"data":[],'message' : 'not have contact us record '}) 
+                return Response(
+                    response, status=404,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])
+            kw['contactus_id']=contact_obj.id      
+            form_obj=request.env['form.content.us.elmakan'].sudo().create(kw)
+
+            response = json.dumps({"data":[],'message' : 'The form has been sent'}) 
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
+
+        except Exception as e:
+            response = json.dumps({'data':{},'message':str(e)}) 
+            return Response(
+                response, status=500,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]) 
+
+
+
+    # @http.route('/form/feature', auth="public",csrf=False,cors='*', website=True, methods=['POST'])
+    # def post_form_feature(self,**kw): 
+    #     result=[]
+    #     headers = request.httprequest.headers
+
+    #     # # sender=environ.get('user_name_request_demo')
+    #     sender='mazen98odoo@gmail.com'
+    #     recipients = [sender]
+    #     subject = 'Submit Form'
+    #     body_email = f"""
+    #                     name : {kw.get('name','')}
+    #                     email : {kw.get('email','')}
+    #                     phone : {kw.get('phone','')}
+    #                     company name : {kw.get('company_name','')}
+    #                     message : {kw.get('message','')}
+    #                 """
+        
+
+        
+    #     try:
+    #         if 'feature' in kw:
+    #             if kw.get('feature'):
+    #                 if kw.get('feature')=='franchising':
+    #                     recipients.append('mazen98odoo@gmail.com')
+    #                     # recipients.append('franchise@almakaan.com')
+    #                 elif kw.get('feature')=='wholesale':
+    #                     recipients.append('info@almakaan.com')
+    #                 elif kw.get('feature')=='logistic':
+    #                     recipients.append('export@almakaan.com')
+
+    #                 else:
+    #                     recipients.append(kw.get('feature'))
+    #             else:
+    #                 response = json.dumps({"data":[],'message' : 'slug feature is required'}) 
+    #                 return Response(
+    #                     response, status=400,
+    #                     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]) 
+    #         else:
+    #             response = json.dumps({"data":[],'message' : 'slug feature is required'}) 
+    #             return Response(
+    #                 response, status=400,
+    #                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])                      
+
+    #         msg = MIMEMultipart()
+    #         msg['From'] = sender
+    #         msg['To'] = ', '.join(recipients)
+    #         msg['Subject'] = subject
+    #         msg.attach(MIMEText(body_email, 'plain'))
+
+    #         # Log in to Gmail's SMTP server
+    #         smtp_server = 'smtp.gmail.com'
+    #         smtp_port = 587
+    #         username = 'mazen98odoo@gmail.com'
+    #         password = 'cgjvcxjyjouqdufh'
+    #         # # username = environ.get('user_name_request_demo')
+    #         # # password = environ.get('password_request_demo')
+    #         server = smtplib.SMTP(smtp_server, smtp_port)
+    #         server.starttls()
+    #         status_code, response =server.login(username, password)
+
+    #         # Send the email
+    #         text = msg.as_string()
+    #         server.sendmail(sender, recipients, text)
+
+    #         # Close the connection to the SMTP server
+    #         server.quit()
+    #         if status_code==235:
+    #             response = json.dumps({"data":[],'message' : 'The form has been sent'}) 
+    #             return Response(
+    #                 response, status=200,
+    #                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]) 
+    #         else:
+    #             response = json.dumps({"data":[],'message' : 'The form was not sent. A technical error occurred'}) 
+    #             return Response(
+    #                 response, status=200,
+    #                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])         
+
+    #     except Exception as e:
+    #         response = json.dumps({'data':{},'message':str(e)}) 
+    #         return Response(
+    #             response, status=500,
+    #             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]) 
+
+
+    @http.route('/contactus', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
+    def get_contactus_details(self): 
+        result=[]
+        headers = request.httprequest.headers
+        try:
+            client_obj=request.env['contact.us.elmakan'].sudo().search([],limit=1)
+            check_list=lambda x:x[0] if x else {} 
+            check_str=lambda x:x if x else ""
+            for item in client_obj:
+                result.append({
+                    "location": [
+                        {
+                            "region":check_str(location.region),
+                            "city": check_str(location.city),
+                            "address": check_str(location.address),
+
+                            "phone": check_str(location.phone),
+                            "fax": check_str(location.fax),
+
+                            "poBoxNumber":check_str(location.poBoxNumber),
+                            "poBoxLocation": check_str(location.poBoxLocation),
+
+                            "email": check_str(location.email)
+                        }
+                        for location in item.location_ids],
+
+                    "ourAgents": [
+                        {
+                            "region": check_str(ourAgents.region),
+                            "name": check_str(ourAgents.name),
+                            "address": check_str(ourAgents.address),
+                            "phone": check_str(ourAgents.phone),
+                            "fax": check_str(ourAgents.fax),
+                            "mobile": check_str(ourAgents.mobile),
+                            "email": check_str(ourAgents.email)
+                        }
+                        for ourAgents in item.ourAgents_ids],
+                    
+                    
+                        
+                })
+            if result:
+                result=result[0]
+            else:
+                result={}    
+            response = json.dumps({"contact":result,'message' : f' Contact US Details'}) 
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
+
+        except Exception as e:
+            response = json.dumps({'data':{},'message':str(e)}) 
+            return Response(
+                response, status=500,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])  
+
+
