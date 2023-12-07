@@ -366,6 +366,7 @@ class Partners(http.Controller):
                             'title': check_str(brand.title),
                             'slug': check_str(brand.slug),
                             'image': check_str(brand.image_url),
+                            'isTopBrand': brand.isTopBrand
                             
                         }
                         for brand in brand_obj]    
@@ -399,6 +400,7 @@ class Partners(http.Controller):
                 result.append({
                     'image': check_str(item.image_url),
                     'title': check_str(item.title),
+                    'isTopBrand': item.isTopBrand,
                     'content': [
                             {
                             'title': check_str(content.title),

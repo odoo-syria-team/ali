@@ -8,6 +8,8 @@
             <tree>
                 <field name="title" />
                 <field name="slug"/>
+                <field name="isTopBrand"/>
+                
             </tree>
         </field>
     </record>
@@ -27,6 +29,7 @@
                         <group>
                             <field name="title" />
                             <field name="slug"/>
+                            <field name="isTopBrand"/>
                         </group>
                     </group>
                     <notebook>

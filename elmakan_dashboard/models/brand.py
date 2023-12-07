@@ -13,7 +13,7 @@ class BrandAlmakaan(models.Model):
     content_ids = fields.One2many('content.brand.elmakan' , 'content_id' , string='Content')
     gallery_ids = fields.One2many('gallery.brand.elmakan' , 'gallery_id' , string='Gallery')
     image_url = fields.Char("image url", compute='_compute_image_url')
-    
+    isTopBrand = fields.Boolean(string='isTopBrand',default=False)
 
     @api.depends('image')
     def _compute_image_url(self):
