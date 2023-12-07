@@ -408,7 +408,7 @@ class Partners(http.Controller):
                         for content in item.content_ids],
                     'description': check_list([{
                             'title': check_str(des.title),
-                            'description-text': check_str(des.description),
+                            'description': check_str(des.description),
                             'text': check_str(des.text)
                         } for des in item.description_ids]),  
                     "gallery": [
