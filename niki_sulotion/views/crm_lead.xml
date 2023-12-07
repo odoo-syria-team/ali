@@ -6,7 +6,7 @@
             <field name="inherit_id" ref="crm.crm_lead_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='tag_ids']" position="after">
-                    <field name="attachment"/>
+
                 </xpath>
             </field>
         </record>

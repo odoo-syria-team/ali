@@ -23,9 +23,6 @@
         "views/document_nikki_list_website.xml",
         "views/document_nikki_form_website.xml",
         "views/contact_us_inherit.xml",
-        "views/crm_lead.xml",
-    ],
-    'web.assets_frontend': [
-        'niki_sulotion/static/src/js/contact_us_form.js',
+        # "views/crm_lead.xml",
     ],
 }

@@ -2,7 +2,7 @@
 <odoo>
 
 
-    <record id="vindor_list_view_nikki" model="ir.ui.view">
+    <record id="vindor_list_view_nikki1" model="ir.ui.view">
 
         <field name="name">vendor List</field>
 
@@ -12,9 +12,10 @@
         <field name="arch" type="xml">
 
 
-            <tree>
+            <tree editable='top'>
 
                 <field name="user_id" />
+                <field name="po" />
                 <field name="product_id" />
                 <field name="product_price" />
                 <field name="product_quantity" />
@@ -25,7 +26,7 @@
     </record>
 
 
-    <record id="input_vendor_product_action_window_nikki" model="ir.actions.act_window">
+    <record id="input_vendor_product_action_window_nikki1" model="ir.actions.act_window">
 
         <field name="name">Vendor Product</field>
 

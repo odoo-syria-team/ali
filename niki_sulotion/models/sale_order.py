@@ -14,6 +14,7 @@ class SaleOrderNiki(models.Model):
             for i in rec.order_line:
                 self.env['output.vendor'].create({
                     'user_id': rec.partner_id.id,
+                    'so' : rec.id,
                     'product_id': i.product_id.id,
                     'product_price': i.price_unit,
                     'product_quantity': i.product_uom_qty

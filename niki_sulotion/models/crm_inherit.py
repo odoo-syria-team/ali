@@ -5,7 +5,6 @@ from datetime import datetime
 class CRMLead(models.Model):
     _inherit = 'crm.lead'  #model name which is going to inherit..
 
-    attachment = fields.Binary('attachment')
 
     @api.model
     def create(self, vals): 
