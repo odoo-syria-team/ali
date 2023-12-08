@@ -578,7 +578,7 @@ class Partners(http.Controller):
                         "slug": check_str(feature.slug)
                         }
                     for feature in item.features_ids],
-                    "contact_us": [
+                    "content": [
                         {
                         "title": check_str(content.title),
                         "text": check_str(content.text),
