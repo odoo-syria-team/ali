@@ -18,8 +18,9 @@
              'views/label_content.xml',
              'views/feature.xml',
              'views/client.xml',
-             'views/contact_us.xml'
-             
+             'views/contact_us.xml',
+             'views/mail.xml',
+             'data/mail.xml'
              ],
 
     'installable': True,

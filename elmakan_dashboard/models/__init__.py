@@ -8,3 +8,4 @@ from . import label_content
 from . import feature
 from . import client
 from . import contact_us
+from . import mail

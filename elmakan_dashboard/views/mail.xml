@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<odoo>
+
+    <record id="mail_list_view_elmakan" model="ir.ui.view">
+        <field name="name">mail List</field>
+        <field name="model">mail.elmakan</field>
+        <field name="arch" type="xml">
+            <tree create="false">
+                <field name="company_email" />
+                <field name="app_key" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="mail_form_view_elmakan" model="ir.ui.view">
+        <field name="name">mail Form</field>
+        <field name="model">mail.elmakan</field>
+        <field name="arch" type="xml">
+            <form string="mail">
+
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_email" />
+                        </group>
+                        <group>
+                            <field name="app_key" />
+                        </group>
+                        
+                    </group>
+                    
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="mail_action_window_elmakan" model="ir.actions.act_window">
+        <field name="name">mail elmakan </field>
+        <field name="res_model">mail.elmakan</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first mail Record! </p>
+        </field>
+    </record>
+
+    <menuitem id="setting_menu_window_elmakan"
+        name='Setting'
+        parent='almakaan_root'
+        sequence="39" />
+
+    <menuitem id="mail_menu_window_elmakan"
+        name='mail setting'
+        parent='setting_menu_window_elmakan'
+        action="mail_action_window_elmakan"
+        sequence="1" />
+    
+
+</odoo>

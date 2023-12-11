@@ -23,9 +23,13 @@ id_label_slider_elmakan,name_label_slider_elmakan,model_label_slider_elmakan,,1,
 id_label_box_elmakan,name_label_box_elmakan,model_label_box_elmakan,,1,1,1,1
 id_feature_elmakan,name_feature_elmakan,model_feature_elmakan,,1,1,1,1
 id_feature_content_elmakan,name_feature_content_elmakan,model_feature_content_elmakan,,1,1,1,1
+id_form_feature_elmakan,name_form_feature_elmakan,model_form_feature_elmakan,,1,1,1,1
+
 id_client_elmakan,name_client_elmakan,model_client_elmakan,,1,1,1,1
 id_client_company_elmakan,name_client_company_elmakan,model_client_company_elmakan,,1,1,1,1
 id_contact_us_elmakan,name_contact_us_elmakan,model_contact_us_elmakan,,1,1,1,1
 id_location_content_us_elmakan,name_location_content_us_elmakan,model_location_content_us_elmakan,,1,1,1,1
 id_ouragents_content_us_elmakan,name_ouragents_content_us_elmakan,model_ouragents_content_us_elmakan,,1,1,1,1
 id_form_content_us_elmakan,name_form_content_us_elmakan,model_form_content_us_elmakan,,1,1,1,1
+id_mail_elmakan,name_mail_elmakan,model_mail_elmakan,,1,1,1,1
+

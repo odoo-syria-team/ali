@@ -42,6 +42,20 @@
                             </field>
 
                         </page>
+
+                        <page name="forms" string="Forms">
+                            <field name="form_ids">
+                                <tree editable="bottom">
+                                    <field name='name' />
+                                    <field name="email" />
+                                    <field name="phone" />
+                                    <field name="company_name" />
+                                    <field name="message" />
+                                    
+                                </tree>
+                            </field>
+
+                        </page>
                         
                     </notebook>
                 </sheet>
