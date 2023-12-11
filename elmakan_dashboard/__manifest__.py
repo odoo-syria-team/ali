@@ -19,8 +19,10 @@
              'views/feature.xml',
              'views/client.xml',
              'views/contact_us.xml',
+             'views/Blog.xml',
              'views/mail.xml',
-             'data/mail.xml'
+             'data/mail.xml',
+             
              ],
 
     'installable': True,

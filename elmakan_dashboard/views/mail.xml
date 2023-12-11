@@ -48,7 +48,7 @@
     <menuitem id="setting_menu_window_elmakan"
         name='Setting'
         parent='almakaan_root'
-        sequence="39" />
+        sequence="40" />
 
     <menuitem id="mail_menu_window_elmakan"
         name='mail setting'
