@@ -37,7 +37,7 @@ class Product(http.Controller):
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db,self.username, self.password, {})
-        if term = None:
+        if term == None:
             response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
             return Response(
             response, status=200,
