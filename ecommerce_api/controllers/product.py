@@ -48,7 +48,7 @@ class Product(http.Controller):
 
             # Search products by text
             text_search_domain = [('name', 'ilike', str(term))]
-            product_ids = models.execute_kw(db, uid, password, 'product.product', 'search_read', [text_search_domain]{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price' ] })
+            product_ids = models.execute_kw(db, uid, password, 'product.product', 'search_read', [text_search_domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price' ] })
             for product in product_ids:
                 product_id = product['id']
                 image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
