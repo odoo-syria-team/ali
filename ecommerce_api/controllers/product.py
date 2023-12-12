@@ -72,7 +72,7 @@ class Product(http.Controller):
             page = int(1)
         else:
             pass
-        if limit = None:
+        if limit == None:
             limit = 10
         else:
             limit = int(limit)
