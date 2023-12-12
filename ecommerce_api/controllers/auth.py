@@ -90,11 +90,18 @@ class Auth(http.Controller):
         body =json.loads(request.httprequest.data)
         username = body['full_name']
         password = body['password']
+        confirm_password = body['confirm_password']
         email = body['email']
         
         username_validation = self._validation(username)
         password_validation = self._pass_validate(password)
         email_validation = self.check_email(email)
+        if confirm_password != password:
+            response = json.dumps({"data":[],'message': 'Make sure your passwor and confirm password are the same'})
+            return Response(
+            response, status=422,
+            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+        )
         if username_validation == False:
             response = json.dumps({"data":[],'message': 'Please add your name'})
             return Response(
@@ -134,7 +141,7 @@ class Auth(http.Controller):
         )
         else :
 
-            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password, 'login' :email  }])
+            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(db, uid, password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
            
             if user_id :
                 date_now = str(datetime.today())

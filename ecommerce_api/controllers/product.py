@@ -31,8 +31,39 @@ class Product(http.Controller):
     password = 'GTECWeb$ite'
 
 
-    @http.route('/product/all',  auth="public",csrf=False, website=True, methods=['GET'])
-    def get_all_products(self, page= int(1), **kw):
+    @http.route('/search',  auth="public",csrf=False, website=True, methods=['GET'])
+    def get_search(self,term=None):
+        response = ''
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        uid = common.authenticate(self.db,self.username, self.password, {})
+        if term = None:
+            response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
+            return Response(
+            response, status=200,
+            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+        )
+        if uid:
+            models = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object')
+
+            # Search products by text
+            text_search_domain = [('name', 'ilike', str(term))]
+            product_ids = models.execute_kw(db, uid, password, 'product.product', 'search_read', [text_search_domain]{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price' ] })
+            for product in product_ids:
+                product_id = product['id']
+                image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
+                product['image'] = image_url
+
+
+            # Iterate over the product_ids to access the product details
+            for product in product_ids:
+                product_name = product['name']
+    
+
+
+
+    @http.route('/categories/all',  auth="public",csrf=False, website=True, methods=['GET'])
+    def get_all_products(self, page= int(1), **kw,limit=None):
         response = ''
 
         page = int(page)
@@ -41,7 +72,47 @@ class Product(http.Controller):
             page = int(1)
         else:
             pass
+        if limit = None:
+            limit = 10
+        else:
+            limit = int(limit)
         
+        authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        uid = common.authenticate(self.db,self.username, self.password, {})
+
+        category_ids = models.execute_kw(
+        self.db, uid, self.password, 'product.category', 'search_read',
+        [[['id', '!=', 0]]],
+        {'fields': ['id', 'name']}
+    )
+        try:
+            response = json.dumps({"data":{'categories':category_ids},'message': 'All product'})
+            return Response(
+            response, status=200,
+            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
+
+        except:
+            response = json.dumps({"data":[],'message': 'No Products now'})
+            return Response(
+            response, status=404,
+            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
+
+    
+    @http.route('/category/product/<int:category_id>',  auth="public",csrf=False, website=True, methods=['GET'])
+    def get_product_by_id(self,category_id, page= int(1), **kw):
+        response = ''
+
+        page = int(page)
+
+        if page == None:
+            page = int(1)
+        else:
+            pass
+            
         authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
@@ -56,30 +127,29 @@ class Product(http.Controller):
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
 
-        
+       
         if valid_token:
-            product_id = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['id' , '!=' , 0]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price'], 'offset': (page-1)*5, 'limit': 5})
+            product_id = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['categ_id' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price'], 'offset': (page-1)*5, 'limit': 5})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
-            user_product_pricelist_id =user_partner[0]['property_product_pricelist'][0]
+            user_product_pricelist_id =user_partner[0]['property_product_pricelist'][0] 
             user_partner = user_partner[0]['partner_id'][0]
             
             
-            product_price_list = models.execute_kw(self.db, uid, self.password, 'product.pricelist.item', 'search_read', [[['pricelist_id' , '=' , user_product_pricelist_id]]],{'fields':['product_id','fixed_price']})
-            print('product_price_list ' ,product_price_list)
-            if product_price_list:
-                for product in product_id:
-                    print('product ' ,product)
-                    for prod in product_price_list:
-                        print('prod ' ,prod)
-                        if product['id'] == prod['product_id'][0] :
-                            product['list_price'] = prod['fixed_price']
-        else:
-            product_id = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['id' , '!=' , 0]]],{'fields':['id','name','type','uom_name','categ_id'], 'offset': (page-1)*5, 'limit': 5})
             
+            product_price_list = models.execute_kw(self.db, uid, self.password, 'product.pricelist.item', 'search_read', [[['pricelist_id' , '=' , user_product_pricelist_id]]],{'fields':['product_id','fixed_price']})
+            for product in product_id:
+                for prod in user_product_pricelist_id:
+                    if product['product_id'][0] == prod['product_id'][0] :
+                        product['list_price'] = prod['fixed_price']
+        else:
+            product_id = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['categ_id' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id'], 'offset': (page-1)*5, 'limit': 5})
         x = 0
         for i in product_id:
+            product_id = i['id']
+            image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
+            i['image'] = image_url
             categ_id = i['categ_id'][0]
 
             categ_name = i['categ_id'][1]
@@ -95,11 +165,12 @@ class Product(http.Controller):
         )
 
         except:
-            response = json.dumps({"data":[],'message': 'No Products now'})
+            response = json.dumps({"data":[],'message': 'No products for this ID'})
             return Response(
             response, status=404,
             headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
         )
+
 
     @http.route('/product/<int:product_id>',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_product_by_id(self,product_id, page= int(1), **kw):
@@ -146,6 +217,9 @@ class Product(http.Controller):
             product_id = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['id' , '=' , product_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id'], 'offset': (page-1)*5, 'limit': 5})
         x = 0
         for i in product_id:
+            product_id = i['id']
+            image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
+            i['image'] = image_url
             categ_id = i['categ_id'][0]
 
             categ_name = i['categ_id'][1]
