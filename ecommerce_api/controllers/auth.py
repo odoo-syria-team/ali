@@ -141,7 +141,7 @@ class Auth(http.Controller):
         )
         else :
 
-            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(db, uid, password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
+            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(self.db, uid, self.password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
            
             if user_id :
                 date_now = str(datetime.today())
