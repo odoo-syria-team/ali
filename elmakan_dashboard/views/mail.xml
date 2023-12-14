@@ -19,7 +19,9 @@
             <form string="mail">
 
                 <sheet>
+                <h4>Transmitter Information :</h4>
                     <group>
+                    
                         <group>
                             <field name="company_email" />
                         </group>
@@ -28,7 +30,29 @@
                         </group>
                         
                     </group>
-                    
+                </sheet>
+                <sheet>    
+                    <h4>Contact US Email :</h4>  
+                    <group> 
+                        <group>
+                            <field name='contact_us_email'/>
+                        </group>
+                    </group>
+                </sheet>
+                <sheet>
+                    <notebook>
+                        <page name="Feature Information" string="Feature Information">
+                            <field name="feature_ids">
+                                <tree editable="bottom">
+                                    <field name='feature_id' />
+                                    <field name="email" />
+                                    
+                                </tree>
+                            </field>
+
+                        </page>
+                        
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -41,7 +65,7 @@
         <field name="view_mode">tree,form</field>
         <field name="context">{}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Create your first mail Record! </p>
+            <p class="o_view_nocontent_smiling_face">Create your first Mail Record! </p>
         </field>
     </record>
 
@@ -51,7 +75,7 @@
         sequence="40" />
 
     <menuitem id="mail_menu_window_elmakan"
-        name='mail setting'
+        name='Communication settings'
         parent='setting_menu_window_elmakan'
         action="mail_action_window_elmakan"
         sequence="1" />

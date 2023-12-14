@@ -7,14 +7,14 @@ from odoo import models,api, fields,_
 class AboutAlmakaan(models.Model):
     _name = 'about.elmakan'
     _description = "this module is for about elmakan"
-
+    _rec_name ='text'
     text=fields.Text(string='Text',required = True,default='')
     video = fields.Text(string='Video',default='')
 
     content_ids = fields.One2many('about.content.elmakan' , 'about_id' , string= 'Content')
     hero_ids = fields.One2many('about.hero.section.elmakan' , 'about_id' , string= 'Heros')
     gallery_ids = fields.One2many('about.gallery.elmakan' , 'about_id' , string= 'Gallery')
-
+    state = fields.Boolean(string='On WebSite',default=False)
 class AboutContentAlmakaan(models.Model): 
     _name ='about.content.elmakan'
 

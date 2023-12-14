@@ -5,13 +5,12 @@ from odoo import models,api, fields,_
 class ContactAlmakaan(models.Model):
     _name = 'contact.elmakan'
     _description = "this module is for contact"
-
+    _rec_name = 'title'
     title = fields.Char('Title')
     text = fields.Text('Text')
     link = fields.Char('Link')
     icon = fields.Binary('Icon')
     image_url = fields.Char("image url", compute='_compute_image_url')
-
     @api.depends('icon')
     def _compute_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')

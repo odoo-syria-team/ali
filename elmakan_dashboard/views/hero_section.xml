@@ -7,7 +7,7 @@
 
         <record id="user_hero_section_list_view_elmakan" model="ir.ui.view">
 
-            <field name="name">User hero_section List</field>
+            <field name="name">Hero Section List</field>
 
             <field name="model">hero.section.elmakan</field>
 
@@ -18,6 +18,7 @@
                 <tree>
 
                     <field name="title" />
+                    <field name="state" />
 
 
                 </tree>
@@ -29,7 +30,7 @@
 
         <record id="user_hero_section_form_view_elmakan" model="ir.ui.view">
 
-            <field name="name">hero_section Form</field>
+            <field name="name">Hero Section Form</field>
 
             <field name="model">hero.section.elmakan</field>
 
@@ -56,8 +57,17 @@
 
 
                             <group>
-                                <field name="image" class="oe_avatar" />
-                                <field name="image_url" />
+                                <field name="image" widget="image" class="oe_avatar" />
+                                <field name="image_url" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="create_date"/>
+                            </group>
+                            <group>
+                                <field name="write_date"/>
+                            </group>
+                            <group>
+                                <field name="state" />
                             </group>
                         </group>
 
@@ -89,7 +99,7 @@
             </field>
 
         </record>
-        <menuitem id="almakaan_root" name="Elmakan Dashboard" sequence="1" />
+        <menuitem id="almakaan_root" name="Almakaan Plus" sequence="1" />
         <menuitem id="elmakan_user_hero_section" name="Hero Section" sequence="31"
             parent="almakaan_root"
             action="hero_section_action_window_elmakan" />

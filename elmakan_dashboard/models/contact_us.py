@@ -9,7 +9,7 @@ class ContactUsAlmakaan(models.Model):
     location_ids = fields.One2many('location.content.us.elmakan' , 'contactus_id' , string= 'Locations')
     ourAgents_ids = fields.One2many('ouragents.content.us.elmakan' , 'contactus_id' , string= 'OurAgents')
     form_ids = fields.One2many('form.content.us.elmakan' , 'contactus_id' , string= 'Forms')
-
+    state = fields.Boolean(string='On WebSite',default=False)
 class LocationContentUsAlmakan(models.Model):
     _name = 'location.content.us.elmakan'
     _description = "this module is for location content us elmakan"  
