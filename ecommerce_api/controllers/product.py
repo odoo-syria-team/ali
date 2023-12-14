@@ -81,11 +81,7 @@ class Product(http.Controller):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db, self.username, self.password, {})
 
-        category_ids = models.execute_kw(
-            self.db, uid, self.password, 'product.public.category', 'search_read',
-            [[['parent_id', '=', None]]],
-            {'fields': ['id', 'name', 'sequence']}
-        )
+        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', None]]],{'fields': ['id', 'name', 'sequence']})
 
         for i in category_ids:
             category_id = i['id']
@@ -108,7 +104,7 @@ class Product(http.Controller):
 
 
     @http.route('/categories/subcategories/<int:parent_id>',  auth="public",csrf=False, website=True, methods=['GET'])
-    def get_all_products(self, parent_id):
+    def get_all_subcategories(self, parent_id):
         response = ''
 
        
@@ -140,7 +136,7 @@ class Product(http.Controller):
         )
     
     @http.route('/category/product/<int:category_id>',  auth="public",csrf=False, website=True, methods=['GET'])
-    def get_product_by_id(self,category_id, page= int(1), **kw):
+    def get_product_by_category_id(self,category_id, page= int(1), **kw):
         response = ''
 
         page = int(page)
