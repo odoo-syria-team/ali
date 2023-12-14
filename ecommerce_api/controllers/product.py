@@ -76,7 +76,11 @@ class Product(http.Controller):
             product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] , 'limit':limit, 'offset':(page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
 
-            cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
+            cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] , 'limit':limit, 'offset':(page - 1) * limit})
+            for i in cat_id:
+                category_id = i['id']
+                image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
+                i['image'] = image_url
             if len(product_ids):
                 totalpages = math.ceil(product_obj_count / len(product_ids))
             else:
@@ -84,7 +88,7 @@ class Product(http.Controller):
             
             for product in product_ids:
                 product_id = product['id']
-                image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image'
+                image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
                 product['image'] = image_url
 
             try:
@@ -228,7 +232,7 @@ class Product(http.Controller):
         x = 0
         for i in product_id:
             product_id = i['id']
-            image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image'
+            image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
             categ_id = i['categ_id'][0]
 
@@ -298,7 +302,7 @@ class Product(http.Controller):
         x = 0
         for i in product_id:
             product_id = i['id']
-            image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image'
+            image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
             categ_id = i['categ_id'][0]
 
