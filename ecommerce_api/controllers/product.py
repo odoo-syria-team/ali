@@ -49,26 +49,28 @@ class Product(http.Controller):
             
             term_list = term.split()
             contains_only_spaces = all(term.isspace() or term == '' for term in term_list)
-            if contains_only_spaces :
+            space_count = len(term_list)
+            print("space_count" , space_count)
+            print("space_count" , len(term_list))
+            if space_count == 1:
+                domain = ['|',]
+                domain.append(['name', 'ilike', term])
+                domain.append(['description_sale', 'ilike', term])
+            elif contains_only_spaces :
                 response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
-            try:
+            else :
                 domain = ['|', '|']
                 for term in term_list:
                     domain.append(['name', 'ilike', term])
                     domain.append(['description_sale', 'ilike', term])
                 
-                product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
-                cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
-            except Exception as e:
-                response = json.dumps({ 'data': [], 'message': "No products for this Term"})
-                return Response(
-                response, status=200,
-                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-            )
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
+            cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
+            
             for product in product_ids:
                 product_id = product['id']
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image'
