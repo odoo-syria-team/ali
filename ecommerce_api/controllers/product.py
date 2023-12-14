@@ -55,13 +55,20 @@ class Product(http.Controller):
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
-            domain = ['|', '|']
-            for term in term_list:
-                domain.append(['name', 'ilike', term])
-                domain.append(['description_sale', 'ilike', term])
-            
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
-            cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
+            try:
+                domain = ['|', '|']
+                for term in term_list:
+                    domain.append(['name', 'ilike', term])
+                    domain.append(['description_sale', 'ilike', term])
+                
+                product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
+                cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
+            except Exception as e:
+                response = json.dumps({ 'data': [], 'message': "No products for this Term"})
+                return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
             for product in product_ids:
                 product_id = product['id']
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image'
