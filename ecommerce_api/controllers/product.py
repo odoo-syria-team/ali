@@ -46,15 +46,21 @@ class Product(http.Controller):
         if uid:
 
             # Search products by text
-            text_search_domain = ['|',('name', 'ilike', str(term)),('description_sale', 'ilike', str(term))]
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [text_search_domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
+            term_list = term.split()
+            domain = ['|', '|']
+            for term in term_list:
+                domain.append(['name', 'ilike', term])
+                domain.append(['description_sale', 'ilike', term])
+            
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
+            cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
             for product in product_ids:
                 product_id = product['id']
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image'
                 product['image'] = image_url
 
             try:
-                response = json.dumps({"data":{'product':product_ids},'message': 'All product'})
+                response = json.dumps({"data":{'product':product_ids,'categories' : cat_id},'message': 'All product'})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
