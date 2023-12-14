@@ -32,7 +32,7 @@ class Product(http.Controller):
 
 
     @http.route('/search',  auth="public",csrf=False, website=True, methods=['GET'])
-    def get_search(self,term=None):
+    def get_search(self,page,term=None ):
         response = ''
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
@@ -43,6 +43,11 @@ class Product(http.Controller):
             response, status=200,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
+        limit = 10
+        if page == None:
+            page = 1
+        else:
+            page = int(page)
         if uid:
 
             # Search products by text
@@ -68,8 +73,11 @@ class Product(http.Controller):
                     domain.append(['name', 'ilike', term])
                     domain.append(['description_sale', 'ilike', term])
                 
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] })
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] , 'limit':limit, 'offset':(page - 1) * limit})
+            product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
+
             cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] })
+            totalpages = math.ceil(product_obj_count / len(product_ids))
             
             for product in product_ids:
                 product_id = product['id']
@@ -77,7 +85,7 @@ class Product(http.Controller):
                 product['image'] = image_url
 
             try:
-                response = json.dumps({"data":{'product':product_ids,'categories' : cat_id},'message': 'All product'})
+                response = json.dumps({"data":{'product':product_ids,'categories' : cat_id},'total_pages' : totalpages,'message': 'All product'})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
