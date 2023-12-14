@@ -53,10 +53,20 @@ class Product(http.Controller):
                 image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
                 product['image'] = image_url
 
+            try:
+                response = json.dumps({"data":{'product':product_ids},'message': 'All product'})
+                return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
 
-            # Iterate over the product_ids to access the product details
-            for product in product_ids:
-                product_name = product['name']
+            except:
+                response = json.dumps({"data":[],'message': 'No products for this Term'})
+                return Response(
+                response, status=404,
+                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+            )
+                    
     
 
 
@@ -80,8 +90,7 @@ class Product(http.Controller):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db, self.username, self.password, {})
 
-        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', None]]],{'fields': ['id', 'name', 'sequence']})
-
+        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', False]]],{'fields': ['id', 'name', 'sequence']})
         for i in category_ids:
             category_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
@@ -144,16 +153,21 @@ class Product(http.Controller):
             page = int(1)
         else:
             pass
-            
+        valid_token = False
         authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db,self.username, self.password, {})
         try:
-            token = authe['Authorization'].replace('Bearer ', '')
-            valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+            
+            if authe:
+                if 'Authorization' in authe:
+                    token = authe['Authorization'].replace('Bearer ', '')
+                    valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+                else :
+                    pass
         except Exception as e:
-            response = json.dumps({ 'data': 'no data', 'message': 'Unauthorized!'})
+            response = json.dumps({ 'data': 'no data', 'message': str(e)})
             return Response(
             response, status=401,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
