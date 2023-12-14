@@ -215,6 +215,7 @@ class Cart(http.Controller):
                     product_id = i['id']
                     image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
                     i['image'] = image_url
+                user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
                 response, status=200,
