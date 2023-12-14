@@ -37,7 +37,7 @@ class Product(http.Controller):
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db,self.username, self.password, {})
-        if term == None:
+        if term == None :
             response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
             return Response(
             response, status=200,
@@ -46,7 +46,15 @@ class Product(http.Controller):
         if uid:
 
             # Search products by text
+            
             term_list = term.split()
+            contains_only_spaces = all(term.isspace() or term == '' for term in term_list)
+            if contains_only_spaces :
+                response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
+                return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
             domain = ['|', '|']
             for term in term_list:
                 domain.append(['name', 'ilike', term])
