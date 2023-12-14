@@ -287,7 +287,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers 
         try:
-            partner_obj=request.env['hero.section.elmakan'].sudo().search([],limit=1)
+            partner_obj=request.env['hero.section.elmakan'].sudo().search([('state','=',True)],limit=1)
             if partner_obj:
                 #get_title=lambda x:x.containt_ar if language=='ar' else x.containt_en
                 #date=lambda x:str(x) if x!=False else "0000-00-00"
@@ -393,7 +393,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            brand_obj=request.env['brand.elmakan'].sudo().search([('slug','=',slug)])
+            brand_obj=request.env['brand.elmakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in brand_obj:
@@ -466,7 +466,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            category_obj=request.env['category.elmakan'].sudo().search([('slug','=',slug)])
+            category_obj=request.env['category.elmakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in category_obj:
@@ -507,7 +507,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            about_obj=request.env['about.elmakan'].sudo().search([],limit=1)
+            about_obj=request.env['about.elmakan'].sudo().search([('state','=',True)],limit=1)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in about_obj:
@@ -557,7 +557,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            home_obj=request.env['home.elmakan'].sudo().search([],limit=1)
+            home_obj=request.env['home.elmakan'].sudo().search([('state','=',True)],limit=1)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in home_obj:
@@ -611,7 +611,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            label_obj=request.env['labelcontent.elmakan'].sudo().search([],limit=1)
+            label_obj=request.env['labelcontent.elmakan'].sudo().search([('state','=',True)],limit=1)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in label_obj:
@@ -653,11 +653,11 @@ class Partners(http.Controller):
 
     @http.route('/<string:slug>', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_feature_by_slug(self,slug): 
-        print('..........................')
         result=[]
         headers = request.httprequest.headers
         try:
-            feature_obj=request.env['feature.elmakan'].sudo().search([('slug','=',slug)])
+            feature_obj=request.env['feature.elmakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
+            print('feature_obj',feature_obj)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in feature_obj:
@@ -696,7 +696,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            client_obj=request.env['client.elmakan'].sudo().search([],limit=1)
+            client_obj=request.env['client.elmakan'].sudo().search([('state','=',True)],limit=1)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in client_obj:
@@ -753,7 +753,8 @@ class Partners(http.Controller):
                         message : {kw.get('message','')}
                     """
         try:
-            recipients=['info@almakaan.com']
+            recipients.append(email_obj.contact_us_email)
+            # recipients=['info@almakaan.com']
             recipients.append(kw.get('email'))
             msg = MIMEMultipart()
             msg['From'] = sender
@@ -777,7 +778,8 @@ class Partners(http.Controller):
             server.quit()
             if status_code==235:
                 
-                contact_obj=request.env['contact.us.elmakan'].sudo().search([],limit=1)
+                contact_obj=request.env['contact.us.elmakan'].sudo().search([('state','=',True)],limit=1)
+                print('contact_obj',contact_obj)
                 if contact_obj:
                     pass
                 else:
@@ -813,6 +815,7 @@ class Partners(http.Controller):
                 sender = email_obj.company_email
                 password = email_obj.app_key
                 username = email_obj.company_email
+
             else:
                 response = json.dumps({"data":[],'message' : 'sender email or app key not set '}) 
                 return Response(
@@ -832,17 +835,20 @@ class Partners(http.Controller):
         
         try:
             if 'feature' in kw:
+                feature_id=request.env['feature.mail.elmakan'].sudo().search([('feature_id.slug','=',kw.get('feature'))])
+                print('feature_id',feature_id)
+                if feature_id:
+                    pass
+                else:
+                    response = json.dumps({"data":[],'message' : f"the required feature {kw.get('feature')} not set in email setting"}) 
+                    return Response(
+                        response, status=400,
+                        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]) 
                 recipients.append(kw.get('email'))
                 if kw.get('feature'):
-                    if kw.get('feature')=='franchising':
-                        recipients.append('franchise@almakaan.com')
-                    elif kw.get('feature')=='wholesale':
-                        recipients.append('info@almakaan.com')
-                    elif kw.get('feature')=='logistic':
-                        recipients.append('export@almakaan.com')
-
-                    else:
-                        recipients.append(kw.get('feature'))
+                    
+                    recipients.append(feature_id.email)
+                    
                 else:
                     response = json.dumps({"data":[],'message' : 'slug feature is required'}) 
                     return Response(
@@ -875,8 +881,9 @@ class Partners(http.Controller):
             # Close the connection to the SMTP server
             server.quit()
             if status_code==235:
-                feature_obj=request.env['feature.elmakan'].sudo().search([('slug','=',kw.get('feature'))])
-                kw['feature_id']=feature_obj.id
+                # feature_obj=request.env['feature.elmakan'].sudo().search([('slug','=',kw.get('feature'))])
+                # print('feature_obj',feature_obj)
+                kw['feature_id']=feature_id.feature_id.id
                 del kw['feature']
                 save_form_obj=request.env['form.feature.elmakan'].sudo().create(kw)
                 response = json.dumps({"data":[],'message' : 'The form has been sent'}) 
@@ -901,7 +908,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            client_obj=request.env['contact.us.elmakan'].sudo().search([],limit=1)
+            client_obj=request.env['contact.us.elmakan'].sudo().search([('state','=',True)],limit=1)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in client_obj:
@@ -986,7 +993,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            blog_obj=request.env['blog.almakan'].sudo().search([('slug','=',slug)])
+            blog_obj=request.env['blog.almakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in blog_obj:

@@ -5,14 +5,14 @@ from odoo import models,api, fields,_
 class LabelContentAlmakaan(models.Model):
     _name = 'labelcontent.elmakan'
     _description = "this module is for label content elmakan"
-
+    _rec_name ='title'
     title = fields.Text(string='Title',default='')
     text = fields.Char(string='Text',default='')
 
     content_ids = fields.One2many('label.content.elmakan' , 'label_id' , string= 'Content')
     slider_ids = fields.One2many('label.slider.elmakan' , 'label_id' , string= 'Sliders')
     box_ids = fields.One2many('label.box.elmakan' , 'label_id' , string= 'Boxs')
-
+    state = fields.Boolean(string='On WebSite',default=False)
 
 class LContentAlmakaan(models.Model): 
     _name ='label.content.elmakan'

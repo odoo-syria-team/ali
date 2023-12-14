@@ -6,13 +6,21 @@ from datetime import datetime ,date,timedelta
 class BlogElmakan(models.Model):
     _name = 'blog.almakan'
     _description = "this module is for blog "
-
+    _rec_name ='slug'
     image = fields.Image(string='Image')
     image_url= fields.Char(string='Image url',compute='_compute_image_url')
     title = fields.Char(string='Title', default='')
     content =  fields.Html(string='Content',default='')
-    slug = fields.Char(string='Slug', default='')
-    tag = fields.Char(string='tag', default='')
+    slug = fields.Char(string='Slug',default='',compute='_compute_slug')
+    tag = fields.Char(string='tag')
+    state = fields.Boolean(string='On WebSite',default=False)
+    @api.depends('title')
+    def _compute_slug(self):
+        for record in self:
+            if record.title:
+                record.slug = record.title.lower().replace(' ','-')
+            else:
+                record.slug='' 
     @api.depends('image')
     def _compute_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')

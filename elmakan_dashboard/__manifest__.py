@@ -10,7 +10,7 @@
         'security/ir.model.access.csv',
              "views/hero_section.xml",
              "views/category.xml",
-             "views/contact.xml",
+            #  "views/contact.xml",
              "views/brand.xml",
              'views/about_us.xml',
              'views/brand_slider.xml',

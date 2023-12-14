@@ -5,7 +5,7 @@ from odoo import models,api, fields,_
 class CategoryAlmakaan(models.Model):
     _name = 'category.elmakan'
     _description = "this module is for hero.section"
-
+    _rec_name = 'slug'
     text=fields.Text(string='Text')
     image = fields.Binary(string='Image')
     title =fields.Char(string='title')
@@ -13,8 +13,18 @@ class CategoryAlmakaan(models.Model):
     boxes_ids = fields.One2many('category.boxes.elmakan' , 'category_id' , string= 'Boxes')
     gallery_ids = fields.One2many('category.gallery.elmakan' , 'category_id' , string= 'Gallery')
     image_url = fields.Char("image url", compute='_compute_image_url')
-    slug = fields.Char(string='Slug',default='')
+    slug = fields.Char(string='Slug',default='',compute='_compute_slug')
     # video= fields.Text(string='video')
+    state = fields.Boolean(string='On WebSite',default=False)
+    
+    @api.depends('title')
+    def _compute_slug(self):
+        for record in self:
+            if record.title:
+                record.slug = record.title.lower().replace(' ','-')
+            else:
+                record.slug='' 
+
     @api.depends('image')
     def _compute_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')

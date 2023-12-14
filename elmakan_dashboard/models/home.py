@@ -5,14 +5,14 @@ from odoo import models,api, fields,_
 class HomeAlmakaan(models.Model):
     _name = 'home.elmakan'
     _description = "this module is for home elmakan"
-
+    _rec_name ='id'
     # text=fields.Text(string='Text',required = True,default='')
     # video = fields.Text(string='Video',default='')
     about_id=fields.Many2one('about.elmakan',string='About')
     hero_id=fields.Many2one('hero.section.elmakan',string='Hero')
     features_ids = fields.One2many('home.features.elmakan' , 'home_id' , string= 'Features')
     content_ids = fields.One2many('home.content.elmakan' , 'home_id' , string= 'Content')
-    
+    state = fields.Boolean(string='On WebSite',default=False)
 
 class HomeFeaturesAlmakaan(models.Model):
     _name = 'home.features.elmakan'
@@ -21,9 +21,17 @@ class HomeFeaturesAlmakaan(models.Model):
     home_id = fields.Many2one('home.elmakan')
     title = fields.Char(string='title',default='')
     link = fields.Char(string='link',default='')
-    slug = fields.Char(string='slug',default='')
+    slug = fields.Char(string='slug',default='',compute='_compute_slug')
     image = fields.Binary(string='Image')
     image_url = fields.Char("image url", compute='_compute_image_url')
+
+    @api.depends('title')
+    def _compute_slug(self):
+        for record in self:
+            if record.title:
+                record.slug = record.title.lower().replace(' ','-')
+            else:
+                record.slug='' 
     @api.depends('image')
     def _compute_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')

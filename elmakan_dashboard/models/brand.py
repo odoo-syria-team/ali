@@ -5,8 +5,8 @@ from odoo import models,api, fields,_
 class BrandAlmakaan(models.Model):
     _name = 'brand.elmakan'
     _description = "this module is for brand"
-
-    slug = fields.Char(string='Slug',default='')
+    _rec_name ='slug'
+    slug = fields.Char(string='Slug',default='',compute='_compute_slug')
     image = fields.Binary('Image')
     title = fields.Text('Title')
     description_ids = fields.One2many('description.brand.elmakan' , 'description_id' , string='Description')
@@ -14,6 +14,14 @@ class BrandAlmakaan(models.Model):
     gallery_ids = fields.One2many('gallery.brand.elmakan' , 'gallery_id' , string='Gallery')
     image_url = fields.Char("image url", compute='_compute_image_url')
     isTopBrand = fields.Boolean(string='isTopBrand',default=False)
+    state = fields.Boolean(string='On WebSite',default=False)
+    @api.depends('title')
+    def _compute_slug(self):
+        for record in self:
+            if record.title:
+                record.slug = record.title.lower().replace(' ','-')
+            else:
+                record.slug='' 
 
     @api.depends('image')
     def _compute_image_url(self):
@@ -29,11 +37,11 @@ class BrandAlmakaan(models.Model):
 class BrandSliderAlmakaan(models.Model):
     _name = 'brand.slider.elmakan'
     _description = "this module is for brand slider elmakan"
-
+    _rec_name ='title'
     title = fields.Text('Title',default='')
     image = fields.Binary('Image')
     image_url = fields.Char("image url", compute='_compute_image_url')
-
+    state = fields.Boolean(string='On WebSite',default=False)
 
     @api.depends('image')
     def _compute_image_url(self):
@@ -68,7 +76,6 @@ class ContentBrandAlmakaan(models.Model):
     @api.depends('image')
     def _compute_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        print('base_url' , base_url)
         for obj in self:
             if obj.image:
                 obj.image_url= base_url + '/web/image?' + 'model=content.brand.elmakan&id=' + str(obj.id) + '&field=image'
