@@ -47,7 +47,11 @@ class Cart(http.Controller):
             response, status=401,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
-        product_data = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['product_tmpl_id' , '=' , product_id]]],{'fields':['list_price','description_sale'], limit = 1})
+        product_data = models.execute_kw(
+            self.db, uid, self.password, 'product.product', 'search_read',
+            [[['product_tmpl_id', '=', product_id]]],
+            {'fields': ['list_price', 'description_sale'], 'limit': 1}
+        )        
         if valid_token:
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
