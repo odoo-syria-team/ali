@@ -63,7 +63,7 @@ class Product(http.Controller):
 
 
     @http.route('/categories/all', auth="public", csrf=False, website=True, methods=['GET'])
-    def get_all_products(self, page=int(1), limit=None):
+    def get_all_categories(self, page=int(1), limit=None):
         response = ''
         page = int(page)
 
