@@ -62,48 +62,49 @@ class Product(http.Controller):
 
 
 
-    @http.route('/categories/all',  auth="public",csrf=False, website=True, methods=['GET'])
-    def get_all_products(self, page= int(1), limit=None):
+    @http.route('/categories/all', auth="public", csrf=False, website=True, methods=['GET'])
+    def get_all_products(self, page=int(1), limit=None):
         response = ''
-
         page = int(page)
 
-        if page == None:
+        if page is None:
             page = int(1)
         else:
             pass
-        if limit == None:
+        if limit is None:
             limit = 10
         else:
             limit = int(limit)
-        
+
         authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
-        uid = common.authenticate(self.db,self.username, self.password, {})
+        uid = common.authenticate(self.db, self.username, self.password, {})
 
         category_ids = models.execute_kw(
-        self.db, uid, self.password, 'product.public.category', 'search_read',
-        [[['parent_id', '=', None]]],
-        {'fields': ['id', 'name', 'sequence']}
+            self.db, uid, self.password, 'product.public.category', 'search_read',
+            [[['parent_id', '=', None]]],
+            {'fields': ['id', 'name', 'sequence']}
+        )
+
         for i in category_ids:
             category_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
             i['image'] = image_url
-    )
+
         try:
-            response = json.dumps({"data":{'categories':category_ids},'message': 'All Categories'})
+            response = json.dumps({"data": {'categories': category_ids}, 'message': 'All Categories'})
             return Response(
-            response, status=200,
-            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
-        )
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+            )
 
         except:
-            response = json.dumps({"data":[],'message': 'No Categories now'})
+            response = json.dumps({"data": [], 'message': 'No Categories now'})
             return Response(
-            response, status=404,
-            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
-        )
+                response, status=404,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+            )
 
 
     @http.route('/categories/subcategories/<int:parent_id>',  auth="public",csrf=False, website=True, methods=['GET'])
@@ -118,14 +119,12 @@ class Product(http.Controller):
         uid = common.authenticate(self.db,self.username, self.password, {})
 
         category_ids = models.execute_kw(
-        self.db, uid, self.password, 'product.public.category', 'search_read',
-        [[['parent_id', '=', parent_id]]],
-        {'fields': ['id', 'name', 'sequence']}
+        self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', parent_id]]],{'fields': ['id', 'name', 'sequence']})
         for i in category_ids:
             category_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
             i['image'] = image_url
-    )
+    
         try:
             response = json.dumps({"data":{'categories':category_ids},'message': 'All Categories'})
             return Response(
