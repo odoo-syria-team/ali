@@ -210,4 +210,35 @@ class Auth(http.Controller):
                 return Response( response, 
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)] 
                 )
+
+    @http.route('/auth/log_out', auth="public",csrf=False, website=True, methods=['POST'])
+    def log_out(self,idd= None, **kw):               
+                     
+                            
+            common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+            uid = common.authenticate(self.db,self.username, self.password, {})
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+            try:
+                token = authe['Authorization'].replace('Bearer ', '')
+                valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+            except Exception as e:
+                response = json.dumps({ 'data': 'no data', 'message': 'Unauthorized!'})
+                return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        
+            if valid_token:
+        
+     
+            
+        
+                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'write', [[int(valid_token[0]['id'])], {'x_name' : ,'x_studio_user_token': }])
+            else : 
+                response=json.dumps({"data":[], 'message':'you had been loged out '}) 
+                return Response( response, 
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)] 
+                )
+    
     
