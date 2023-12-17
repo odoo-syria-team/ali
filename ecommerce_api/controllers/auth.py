@@ -234,7 +234,7 @@ class Auth(http.Controller):
      
             
         
-                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'write', [[int(valid_token[0]['id'])], {'x_name' : ,'x_studio_user_token': }])
+                    user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'write', [[int(valid_token[0]['id'])], {'x_name' : '','x_studio_user_token': ''}])
             else : 
                 response=json.dumps({"data":[], 'message':'you had been loged out '}) 
                 return Response( response, 
