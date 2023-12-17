@@ -10,7 +10,7 @@
         <field name="arch" type="xml">
 
 
-            <form string="Customer Product">
+            <form string="Vendors Product">
 
 
                 <sheet>

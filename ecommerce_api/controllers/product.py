@@ -133,6 +133,15 @@ class Product(http.Controller):
             category_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
             i['image'] = image_url
+            sub_category_ids = models.execute_kw(
+                self.db, uid, self.password, 'product.public.category', 'search',
+                [[['parent_id', '=', category_id]]]
+            )
+            
+            if sub_category_ids:
+                i['sub_category'] = True
+            else:
+                i['sub_category'] = False
 
         try:
             response = json.dumps({"data": {'categories': category_ids}, 'message': 'All Categories'})
@@ -149,37 +158,47 @@ class Product(http.Controller):
             )
 
 
-    @http.route('/categories/subcategories/<int:parent_id>',  auth="public",csrf=False, website=True, methods=['GET'])
+    @http.route('/categories/subcategories/<int:parent_id>', auth="public", csrf=False, website=True, methods=['GET'])
     def get_all_subcategories(self, parent_id):
         response = ''
-
-       
         
         authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
-        uid = common.authenticate(self.db,self.username, self.password, {})
-
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        
         category_ids = models.execute_kw(
-        self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', parent_id]]],{'fields': ['id', 'name', 'sequence']})
-        for i in category_ids:
-            category_id = i['id']
+            self.db, uid, self.password, 'product.public.category', 'search_read',
+            [[['parent_id', '=', parent_id]]], {'fields': ['id', 'name', 'sequence']}
+        )
+        
+        for category in category_ids:
+            category_id = category['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
-            i['image'] = image_url
-    
+            category['image'] = image_url
+            
+            sub_category_ids = models.execute_kw(
+                self.db, uid, self.password, 'product.public.category', 'search',
+                [[['parent_id', '=', category_id]]]
+            )
+            
+            if sub_category_ids:
+                category['sub_category'] = True
+            else:
+                category['sub_category'] = False
+        
         try:
-            response = json.dumps({"data":{'categories':category_ids},'message': 'All Categories'})
+            response = json.dumps({"data": {'categories': category_ids}, 'message': 'All Categories'})
             return Response(
-            response, status=200,
-            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
-        )
-
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+            )
         except:
-            response = json.dumps({"data":[],'message': 'No Categories now'})
+            response = json.dumps({"data": [], 'message': 'No Categories now'})
             return Response(
-            response, status=404,
-            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
-        )
+                response, status=404,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+            )
     
     @http.route('/category/product/<int:category_id>',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_product_by_category_id(self,category_id, page= int(1), **kw):
@@ -319,9 +338,6 @@ class Product(http.Controller):
 
         x = 0
         for i in products:
-            print(" >>>>>>>>>>>>>>>>  >>>> ", i)
-            print(" >>>>>>>>>>>>>>>>  >>>> ", products[x]['categ_id'])
-
             product_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
