@@ -275,6 +275,91 @@ class Product(http.Controller):
         )
 
 
+
+    @http.route('/featured/product',  auth="public",csrf=False, website=True, methods=['GET'])
+    def get_product_by_category_id(self, page= int(1), **kw):
+        response = ''
+
+        page = int(page)
+
+        if page == None:
+            page = int(1)
+        else:
+            pass
+        valid_token = False
+        authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        uid = common.authenticate(self.db,self.username, self.password, {})
+        try:
+            
+            if authe:
+                if 'Authorization' in authe:
+                    token = authe['Authorization'].replace('Bearer ', '')
+                    valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+                else :
+                    pass
+        except Exception as e:
+            response = json.dumps({ 'data': 'no data', 'message': str(e)})
+            return Response(
+            response, status=401,
+            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+        )
+
+        crm_tag = models.execute_kw(self.db, uid, self.password, 'crm.tag', 'search_read', [[['name' , '=' , 'featured']]],{'fields':['id','name']})
+        if crm_tag:
+            id = crm_tag[0]['id']
+            if valid_token:
+                
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price']})
+                user_id =int(valid_token[0]['x_studio_user_name'][0])
+
+                user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
+                user_product_pricelist_id =user_partner[0]['property_product_pricelist'][0] 
+                user_partner = user_partner[0]['partner_id'][0]
+                
+                
+                
+                product_price_list = models.execute_kw(self.db, uid, self.password, 'product.pricelist.item', 'search_read', [[['pricelist_id' , '=' , user_product_pricelist_id]]],{'fields':['product_id','fixed_price']})
+                for product in product_id:
+                    for prod in user_product_pricelist_id:
+                        if product['product_id'][0] == prod['product_id'][0] :
+                            product['list_price'] = prod['fixed_price']
+            else:
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id']})
+            x = 0
+            for i in products:
+                
+                product_id = i['id']
+                image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
+                i['image'] = image_url
+                categ_id = i['categ_id'][0]
+                categ_name = i['categ_id'][1]
+                products[x]['categ_name'] = categ_name
+                products[x]['categ_id'] = categ_id
+                
+                x += 1
+        else :
+            response = json.dumps({"data":[],'message': 'No featured products '})
+            return Response(
+            response, status=200,
+            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
+        try:
+            response = json.dumps({"data":{'product':products},'message': 'All product'})
+            return Response(
+            response, status=200,
+            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
+
+        except:
+            response = json.dumps({"data":[],'message': 'No products for this ID'})
+            return Response(
+            response, status=404,
+            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
+
+
     @http.route('/product/<int:product_id>', auth="public", csrf=False, website=True, methods=['GET'])
     def get_product_by_id(self, product_id, page=int(1), **kw):
         response = ''
