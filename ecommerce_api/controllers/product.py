@@ -306,7 +306,7 @@ class Product(http.Controller):
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
 
-        crm_tag = models.execute_kw(self.db, uid, self.password, 'crm.tag', 'search_read', [[['name' , '=' , 'featured']]],{'fields':['id','name']})
+        crm_tag = models.execute_kw(self.db, uid, self.password, 'product.tag', 'search_read', [[['name' , '=' , 'featured']]],{'fields':['id','name']})
         if crm_tag:
             id = crm_tag[0]['id']
             if valid_token:
