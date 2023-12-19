@@ -277,7 +277,7 @@ class Product(http.Controller):
 
 
     @http.route('/featured/product',  auth="public",csrf=False, website=True, methods=['GET'])
-    def get_product_by_category_id(self, page= int(1), **kw):
+    def get_product_by_featured_id(self, page= int(1), **kw):
         response = ''
 
         page = int(page)
