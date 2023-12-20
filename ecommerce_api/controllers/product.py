@@ -85,7 +85,7 @@ class Product(http.Controller):
                 totalpages = math.ceil(product_obj_count / len(product_ids))
             else:
                 totalpages = 0
-            
+            x = 0
             for product in product_ids:
                 product_id = product['id']
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
@@ -94,7 +94,7 @@ class Product(http.Controller):
                 categ_name = product['categ_id'][1]
                 product_ids[x]['categ_name'] = categ_name
                 product_ids[x]['categ_id'] = categ_id
-
+                x+= 1 
             try:
                 response = json.dumps({"data":{'product':product_ids,'categories' : cat_id},'total_pages' : totalpages,'message': 'All product'})
                 return Response(
@@ -438,7 +438,7 @@ class Product(http.Controller):
             x += 1
 
         try:
-            response = json.dumps({"data": {'product': products}, 'message': 'All product'})
+            response = json.dumps({"data": {'product': products[0]}, 'message': 'Product Details '})
             return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
