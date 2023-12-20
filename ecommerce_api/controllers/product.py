@@ -73,7 +73,7 @@ class Product(http.Controller):
                     domain.append(['name', 'ilike', term])
                     domain.append(['description_sale', 'ilike', term])
                 
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] , 'limit':limit, 'offset':(page - 1) * limit})
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when'] , 'limit':limit, 'offset':(page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
 
             cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] , 'limit':limit, 'offset':(page - 1) * limit})
@@ -236,7 +236,7 @@ class Product(http.Controller):
 
        
         if valid_token:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when']})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -315,7 +315,7 @@ class Product(http.Controller):
             id = crm_tag[0]['id']
             if valid_token:
                 
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when']})
                 user_id =int(valid_token[0]['x_studio_user_name'][0])
 
                 user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -330,7 +330,7 @@ class Product(http.Controller):
                         if product['product_id'][0] == prod['product_id'][0] :
                             product['list_price'] = prod['fixed_price']
             else:
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','description_sale']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when']})
             x = 0
             for i in products:
                 
@@ -396,7 +396,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale'],
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when'],
                 'offset': (page - 1) * 5, 'limit': 5}
             )
             user_id = int(valid_token[0]['x_studio_user_name'][0])
@@ -421,7 +421,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale'], 'offset': (page - 1) * 5,
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when'], 'offset': (page - 1) * 5,
                 'limit': 5}
             )
 
