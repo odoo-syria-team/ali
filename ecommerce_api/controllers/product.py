@@ -448,6 +448,10 @@ class Product(http.Controller):
             image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
             categ_id = i['categ_id'][0]
+            im.append(
+                'id':0 ,
+                'image' : image_url
+            )
             categ_name = i['categ_id'][1]
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
