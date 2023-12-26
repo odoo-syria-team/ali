@@ -131,7 +131,7 @@ class Product(http.Controller):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db, self.username, self.password, {})
 
-        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', False]]],{'fields': ['id', 'name', 'sequence']})
+        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', False]]],{'fields': ['id', 'name', 'sequence','x_studio_brand']})
         for i in category_ids:
             category_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
@@ -172,7 +172,7 @@ class Product(http.Controller):
         
         category_ids = models.execute_kw(
             self.db, uid, self.password, 'product.public.category', 'search_read',
-            [[['parent_id', '=', parent_id]]], {'fields': ['id', 'name', 'sequence']}
+            [[['parent_id', '=', parent_id]]], {'fields': ['id', 'name', 'sequence','x_studio_brand']}
         )
         
         for category in category_ids:
