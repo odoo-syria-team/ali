@@ -246,7 +246,7 @@ class Product(http.Controller):
             
             product_price_list = models.execute_kw(self.db, uid, self.password, 'product.pricelist.item', 'search_read', [[['pricelist_id' , '=' , user_product_pricelist_id]]],{'fields':['product_id','fixed_price']})
             for product in products:
-                for prod in user_product_pricelist_id:
+                for prod in product_price_list:
                     if product['product_id'][0] == prod['product_id'][0] :
                         product['list_price'] = prod['fixed_price']
         else:
