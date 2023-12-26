@@ -250,7 +250,7 @@ class Product(http.Controller):
                     if product['product_id'][0] == prod['product_id'][0] :
                         product['list_price'] = prod['fixed_price']
         else:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','description_sale','x_studio_product_feature_mobile']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','list_price','categ_id','description_sale','x_studio_product_feature_mobile']})
         x = 0
         for i in products:
             
@@ -261,6 +261,7 @@ class Product(http.Controller):
             categ_name = i['categ_id'][1]
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
+            products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             
             x += 1
         try:
@@ -329,7 +330,7 @@ class Product(http.Controller):
                         if product['product_id'][0] == prod['product_id'][0] :
                             product['list_price'] = prod['fixed_price']
             else:
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
             x = 0
             for i in products:
                 
@@ -340,7 +341,7 @@ class Product(http.Controller):
                 categ_name = i['categ_id'][1]
                 products[x]['categ_name'] = categ_name
                 products[x]['categ_id'] = categ_id
-                
+                products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 x += 1
         else :
             response = json.dumps({"data":[],'message': 'No featured products '})
@@ -456,6 +457,7 @@ class Product(http.Controller):
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
             products[x]['images_catalog']  = im
+            products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             im = []
             x += 1
 
