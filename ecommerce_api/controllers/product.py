@@ -30,13 +30,28 @@ class Product(http.Controller):
     username ='marketing@gtecsecurity.co.uk'
     password = 'GTECWeb$ite'
 
-
+    def extract_float_value(self,string):
+        pattern = r"[-+]?\d*\.\d+|\d+"  # Regular expression pattern to match float or integer values
+        match = re.search(pattern, string)
+        if match:
+            float_value = float(match.group())
+            return float_value
+        else:
+            return None
     @http.route('/search',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_search(self,page=None,term=None ):
         response = ''
+        valid_token = False
+        authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db,self.username, self.password, {})
+        if authe:
+                if 'Authorization' in authe:
+                    token = authe['Authorization'].replace('Bearer ', '')
+                    valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+                else :
+                    pass
         if term == None :
             response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
             return Response(
@@ -72,7 +87,7 @@ class Product(http.Controller):
                     domain.append(['name', 'ilike', term])
                     # domain.append(['description_sale', 'ilike', term])
                 
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_product_feature_mobile'] , 'limit':limit, 'offset':(page - 1) * limit})
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_product_feature_mobile','tax_string'] , 'limit':limit, 'offset':(page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
 
             # cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] , 'limit':limit, 'offset':(page - 1) * limit})
@@ -93,6 +108,9 @@ class Product(http.Controller):
                 categ_name = product['categ_id'][1]
                 product_ids[x]['categ_name'] = categ_name
                 product_ids[x]['categ_id'] = categ_id
+                if products[x]['tax_string']:
+                    products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
+                products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 x+= 1 
             try:
                 response = json.dumps({"data":{'product':product_ids},'total_pages' : totalpages,'message': 'All product'})
@@ -235,7 +253,7 @@ class Product(http.Controller):
 
        
         if valid_token:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -250,7 +268,7 @@ class Product(http.Controller):
                     if product['product_id'][0] == prod['product_id'][0] :
                         product['list_price'] = prod['fixed_price']
         else:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','list_price','categ_id','description_sale','x_studio_product_feature_mobile']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','list_price','categ_id','description_sale','x_studio_product_feature_mobile','tax_string']})
         x = 0
         for i in products:
             
@@ -261,6 +279,8 @@ class Product(http.Controller):
             categ_name = i['categ_id'][1]
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
+            if products[x]['tax_string']:
+                products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
             products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             
             x += 1
@@ -315,7 +335,7 @@ class Product(http.Controller):
             id = crm_tag[0]['id']
             if valid_token:
                 
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
                 user_id =int(valid_token[0]['x_studio_user_name'][0])
 
                 user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -330,7 +350,7 @@ class Product(http.Controller):
                         if product['product_id'][0] == prod['product_id'][0] :
                             product['list_price'] = prod['fixed_price']
             else:
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
             x = 0
             for i in products:
                 
@@ -341,6 +361,9 @@ class Product(http.Controller):
                 categ_name = i['categ_id'][1]
                 products[x]['categ_name'] = categ_name
                 products[x]['categ_id'] = categ_id
+                if products[x]['tax_string']:
+                    products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
+            # products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 x += 1
         else :
@@ -398,7 +421,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile'],
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string'],
                 'offset': (page - 1) * 5, 'limit': 5}
             )
             user_id = int(valid_token[0]['x_studio_user_name'][0])
@@ -423,7 +446,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile'], 'offset': (page - 1) * 5,
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string'], 'offset': (page - 1) * 5,
                 'limit': 5}
             )
 
@@ -457,6 +480,9 @@ class Product(http.Controller):
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
             products[x]['images_catalog']  = im
+            
+            if products[x]['tax_string']:
+                products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
             products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             im = []
             x += 1
