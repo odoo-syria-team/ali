@@ -94,7 +94,7 @@ class Auth(http.Controller):
         email = body['email']
         
         username_validation = self._validation(username)
-        # password_validation = self._pass_validate(password)
+        password_validation = self._pass_validate(password)
         email_validation = self.check_email(email)
         if confirm_password != password:
             response = json.dumps({"data":[],'message': 'Make sure your passwor and confirm password are the same'})
@@ -116,12 +116,12 @@ class Auth(http.Controller):
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
         
-        # if password_validation == None:
-        #     response = json.dumps({"data":[],'message': 'يرجى إدخال كلمة المرور تحتوي على 8 محارف على الأقل و حرف كبير و حرف صغير و رمز ولاتحتوي على فراغات'})
-        #     return Response(
-        #     response, status=422,
-        #     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-        # )
+        if password_validation == None:
+            response = json.dumps({"data":[],'message': 'يرجى إدخال كلمة المرور تحتوي على 8 محارف على الأقل و حرف كبير و حرف صغير و رمز ولاتحتوي على فراغات'})
+            return Response(
+            response, status=422,
+            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+        )
         uid = False
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
