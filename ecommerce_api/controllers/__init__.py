@@ -4,4 +4,4 @@ from . import cart
 from . import payments
 from . import banners
 from . import wishlist
-from . import script
+# from . import script
