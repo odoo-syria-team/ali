@@ -55,12 +55,11 @@ class Product(http.Controller):
             term_list = term.split()
             contains_only_spaces = all(term.isspace() or term == '' for term in term_list)
             space_count = len(term_list)
-            print("space_count" , space_count)
-            print("space_count" , len(term_list))
+            
             if space_count == 1:
-                domain = ['|',]
-                domain.append(['name', 'ilike', term])
-                domain.append(['description_sale', 'ilike', term])
+                # domain = ['|',]
+                domain= [['name', 'ilike', term]]
+                # domain.append(['description_sale', 'ilike', term])
             elif contains_only_spaces :
                 response = json.dumps({ 'data': [], 'message': 'Please add keyword'})
                 return Response(
@@ -68,31 +67,35 @@ class Product(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
             else :
-                domain = ['|', '|']
+                domain = ['|',]
                 for term in term_list:
                     domain.append(['name', 'ilike', term])
-                    domain.append(['description_sale', 'ilike', term])
+                    # domain.append(['description_sale', 'ilike', term])
                 
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ] , 'limit':limit, 'offset':(page - 1) * limit})
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_product_feature_mobile'] , 'limit':limit, 'offset':(page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
 
-            cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] , 'limit':limit, 'offset':(page - 1) * limit})
-            for i in cat_id:
-                category_id = i['id']
-                image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
-                i['image'] = image_url
+            # cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] , 'limit':limit, 'offset':(page - 1) * limit})
+            # for i in cat_id:
+            #     category_id = i['id']
+            #     image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
+            #     i['image'] = image_url
             if len(product_ids):
                 totalpages = math.ceil(product_obj_count / len(product_ids))
             else:
                 totalpages = 0
-            
+            x = 0
             for product in product_ids:
                 product_id = product['id']
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
                 product['image'] = image_url
-
+                categ_id = product['categ_id'][0]
+                categ_name = product['categ_id'][1]
+                product_ids[x]['categ_name'] = categ_name
+                product_ids[x]['categ_id'] = categ_id
+                x+= 1 
             try:
-                response = json.dumps({"data":{'product':product_ids,'categories' : cat_id},'total_pages' : totalpages,'message': 'All product'})
+                response = json.dumps({"data":{'product':product_ids},'total_pages' : totalpages,'message': 'All product'})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
@@ -128,7 +131,7 @@ class Product(http.Controller):
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
         uid = common.authenticate(self.db, self.username, self.password, {})
 
-        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', False]]],{'fields': ['id', 'name', 'sequence']})
+        category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',[[['parent_id', '=', False]]],{'fields': ['id', 'name', 'sequence','x_studio_brand']})
         for i in category_ids:
             category_id = i['id']
             image_url = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category_id) + '&field=image_1920'
@@ -169,7 +172,7 @@ class Product(http.Controller):
         
         category_ids = models.execute_kw(
             self.db, uid, self.password, 'product.public.category', 'search_read',
-            [[['parent_id', '=', parent_id]]], {'fields': ['id', 'name', 'sequence']}
+            [[['parent_id', '=', parent_id]]], {'fields': ['id', 'name', 'sequence','x_studio_brand']}
         )
         
         for category in category_ids:
@@ -232,7 +235,7 @@ class Product(http.Controller):
 
        
         if valid_token:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -242,12 +245,12 @@ class Product(http.Controller):
             
             
             product_price_list = models.execute_kw(self.db, uid, self.password, 'product.pricelist.item', 'search_read', [[['pricelist_id' , '=' , user_product_pricelist_id]]],{'fields':['product_id','fixed_price']})
-            for product in product_id:
-                for prod in user_product_pricelist_id:
+            for product in products:
+                for prod in product_price_list:
                     if product['product_id'][0] == prod['product_id'][0] :
                         product['list_price'] = prod['fixed_price']
         else:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','list_price','categ_id','description_sale','x_studio_product_feature_mobile']})
         x = 0
         for i in products:
             
@@ -258,6 +261,7 @@ class Product(http.Controller):
             categ_name = i['categ_id'][1]
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
+            products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             
             x += 1
         try:
@@ -311,7 +315,7 @@ class Product(http.Controller):
             id = crm_tag[0]['id']
             if valid_token:
                 
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
                 user_id =int(valid_token[0]['x_studio_user_name'][0])
 
                 user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -321,12 +325,12 @@ class Product(http.Controller):
                 
                 
                 product_price_list = models.execute_kw(self.db, uid, self.password, 'product.pricelist.item', 'search_read', [[['pricelist_id' , '=' , user_product_pricelist_id]]],{'fields':['product_id','fixed_price']})
-                for product in product_id:
-                    for prod in user_product_pricelist_id:
+                for product in products:
+                    for prod in product_price_list:
                         if product['product_id'][0] == prod['product_id'][0] :
                             product['list_price'] = prod['fixed_price']
             else:
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile']})
             x = 0
             for i in products:
                 
@@ -337,7 +341,7 @@ class Product(http.Controller):
                 categ_name = i['categ_id'][1]
                 products[x]['categ_name'] = categ_name
                 products[x]['categ_id'] = categ_id
-                
+                products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 x += 1
         else :
             response = json.dumps({"data":[],'message': 'No featured products '})
@@ -381,18 +385,20 @@ class Product(http.Controller):
                     self.db, uid, self.password, 'x_user_token', 'search_read', 
                     [[['x_studio_user_token', '=', token]]], {'fields': ['x_studio_user_name']}
                 )
+            else:
+                    valid_token = False
         except Exception as e:
             response = json.dumps({'data': 'no data', 'message': str(e)})
             return Response(
                 response, status=401,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
-
+        print('valid_token >> ' , valid_token)
         if valid_token:
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price'],
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile'],
                 'offset': (page - 1) * 5, 'limit': 5}
             )
             user_id = int(valid_token[0]['x_studio_user_name'][0])
@@ -417,24 +423,46 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id'], 'offset': (page - 1) * 5,
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile'], 'offset': (page - 1) * 5,
                 'limit': 5}
             )
 
         x = 0
+        im = []
         for i in products:
             product_id = i['id']
+            if i['product_template_image_ids']:
+                for item in i['product_template_image_ids']:
+                    images = models.execute_kw(
+                    self.db, uid, self.password, 'product.image', 'search_read',
+                    [[['id', '=', item]]],
+                    {'fields': ['id','image_1920' ]}
+                )
+                    if images:
+                        im_url = self.url + '/web/image?' + 'model=product.image&id=' + str(item) + '&field=image_1920'
+                        im.append({
+                            'id' : images[0]['id'],
+                            'image' : im_url
+                        })
+                        images = False
+                print("i['product_template_image_ids'] >>>>>" , i['product_template_image_ids'])
             image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
             categ_id = i['categ_id'][0]
+            im.append({
+                'id': 0 ,
+                'image' : image_url}
+            )
             categ_name = i['categ_id'][1]
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
-            
+            products[x]['images_catalog']  = im
+            products[x]['list_price'] = products[x]['list_price'] if valid_token else None
+            im = []
             x += 1
 
         try:
-            response = json.dumps({"data": {'product': products}, 'message': 'All product'})
+            response = json.dumps({"data": {'product': products[0]}, 'message': 'Product Details '})
             return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
