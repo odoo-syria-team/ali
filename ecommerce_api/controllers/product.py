@@ -108,9 +108,9 @@ class Product(http.Controller):
                 categ_name = product['categ_id'][1]
                 product_ids[x]['categ_name'] = categ_name
                 product_ids[x]['categ_id'] = categ_id
-                if products[x]['tax_string']:
-                    products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
-                products[x]['list_price'] = products[x]['list_price'] if valid_token else None
+                if product_ids[x]['tax_string']:
+                    product_ids[x]['list_price'] = self.extract_float_value(product_ids[x]['tax_string'])
+                product_ids[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 x+= 1 
             try:
                 response = json.dumps({"data":{'product':product_ids},'total_pages' : totalpages,'message': 'All product'})

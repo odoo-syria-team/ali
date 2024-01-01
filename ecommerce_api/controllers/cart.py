@@ -97,7 +97,7 @@ class Cart(http.Controller):
             token = authe['Authorization'].replace('Bearer ', '')
             valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
         except Exception as e:
-            response = json.dumps({ 'data': 'no data', 'message': 'Unauthorized!'})
+            response = json.dumps({ 'data': 'no data', 'message': str(e)})
             return Response(
             response, status=401,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
