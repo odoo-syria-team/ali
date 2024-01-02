@@ -206,8 +206,8 @@ class WishList(http.Controller):
                 headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
             )
 
-    @http.route('/wishlist/<int:wishlist_id>', auth="public", csrf=False, website=True, methods=['DELETE'])
-    def delete_from_wishlist(self, wishlist_id=None, **kw):
+    @http.route('/wishlist/<int:product_id>', auth="public", csrf=False, website=True, methods=['DELETE'])
+    def delete_from_wishlist(self, product_id=None, **kw):
         response = ''
         
         authe = request.httprequest.headers
@@ -234,13 +234,13 @@ class WishList(http.Controller):
             user_partner = user_partner[0]['partner_id'][0]
             
             # Check if the wishlist ID exists
-            wishlist_exists = models.execute_kw(self.db, uid, self.password, 'product.wishlist', 'search_count',
-                                                [[['id', '=', wishlist_id], ['partner_id', '=', user_partner]]])
+            wishlist_exists = models.execute_kw(self.db, uid, self.password, 'product.wishlist', 'search',
+                                                [['&',['product_id', '=', product_id], ['partner_id', '=', user_partner]]])
             if wishlist_exists:
                 # Delete the wishlist item
-                models.execute_kw(self.db, uid, self.password, 'product.wishlist', 'unlink', [[wishlist_id]])
+                models.execute_kw(self.db, uid, self.password, 'product.wishlist', 'unlink', [[wishlist_exists[0]]])
                 
-                response = json.dumps({'data': {'wishlist_id': wishlist_id}, 'message': 'Product removed from wishlist'})
+                response = json.dumps({'data': {'wishlist_id': wishlist_exists[0]}, 'message': 'Product removed from wishlist'})
                 return Response(
                     response, status=200,
                     headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),

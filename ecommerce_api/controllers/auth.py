@@ -248,3 +248,82 @@ class Auth(http.Controller):
                 response, status=403,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
             )
+
+
+
+
+    @http.route('/edit_profile',  auth="public",csrf=False, website=True, methods=['POST'])
+    def edit_profile(self, **kw):
+        
+
+        authe = request.httprequest.headers
+        fields = {}
+        try:
+            token = authe['Authorization'].replace('Bearer ', '')
+            valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+        except Exception as e:
+            response = json.dumps({ 'data': 'no data', 'message': 'Unauthorized!'})
+            return Response(
+            response, status=401,
+            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+        )
+
+
+
+        
+        change_phone =False
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))        
+        body =json.loads(request.httprequest.data)
+
+        
+
+        
+            
+        if 'name' in body:
+            
+            
+            fields['name']=body['full_name']
+
+            
+        if 'phone' in body :
+            
+                
+                fields['login']=body['phone']
+
+        
+        try:
+            
+            user_id = common.authenticate(self.db,login, password, {})
+        except:
+            
+            response = json.dumps({'data':[], 'message': 'كلمة المرور غير صحيحة  '})
+            return Response(response,
+        status=403,
+        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+    )
+        
+        
+        if not user_id :
+            response = json.dumps({'data':[], 'message': 'كلمة المرور غير صحيحة  '})
+            return Response(response,
+        status=403,
+        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+    )
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['login','name'"phone"]})
+
+    
+            
+            
+        c=models.execute_kw(self.db, uid, self.password, 'res.users', 'write', [[id], fields])
+        
+        
+
+
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name','father_name', 'email',"login"]})
+        response = json.dumps({'data': user_data,'message':'تم تغيير معلوماتك'})
+        return Response(
+        response, status=200,
+        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+    )   
