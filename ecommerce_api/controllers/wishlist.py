@@ -30,9 +30,19 @@ class WishList(http.Controller):
     username ='marketing@gtecsecurity.co.uk'
     password = 'GTECWeb$ite'
 
+
+    def extract_float_value(self,string):
+        pattern = r"[-+]?\d*\.\d+|\d+"  # Regular expression pattern to match float or integer values
+        match = re.search(pattern, string)
+        if match:
+            float_value = float(match.group())
+            return float_value
+        else:
+            return None
     @http.route('/wishlist/mine',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_my_wishlist(self,idd= None, **kw): 
-        response = ''            
+        response = '' 
+        products_res=[]           
         authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
@@ -57,10 +67,66 @@ class WishList(http.Controller):
             if user_wishlist:
                 
                 for i in user_wishlist:
-                    product_id = i['product_id']
-                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
-                    i['image'] = image_url
-                response=json.dumps({"data":{'wishlist':user_wishlist}, 'message' : 'wishlist Details'})
+                    product_id = int(i['product_id'][0])
+                    products =models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read',
+                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
+                     
+
+                    user_id = int(valid_token[0]['x_studio_user_name'][0])
+                    user_partner = models.execute_kw(
+                        self.db, uid, self.password, 'res.users', 'search_read',
+                        [[['id', '=', user_id]]], {'fields': ['partner_id', 'property_product_pricelist']}
+                    )
+                    user_product_pricelist_id = user_partner[0]['property_product_pricelist'][0]
+                    user_partner = user_partner[0]['partner_id'][0]
+
+                    product_price_list = models.execute_kw(
+                        self.db, uid, self.password, 'product.pricelist.item', 'search_read',
+                        [[['pricelist_id', '=', user_product_pricelist_id]]],
+                        {'fields': ['product_id', 'fixed_price']}
+                    )
+
+                    for product in products:
+                        for prod in product_price_list:
+                            if product['product_id'][0] == prod['product_id'][0]:
+                                product['list_price'] = prod['fixed_price']
+                    x = 0
+                    im = []
+                    for i in products:
+                        product_id = i['id']
+                        if i['product_template_image_ids']:
+                            for item in i['product_template_image_ids']:
+                                images = models.execute_kw(
+                                self.db, uid, self.password, 'product.image', 'search_read',
+                                [[['id', '=', item]]],
+                                {'fields': ['id','image_1920' ]}
+                            )
+                                if images:
+                                    im_url = self.url + '/web/image?' + 'model=product.image&id=' + str(item) + '&field=image_1920'
+                                    im.append({
+                                        'id' : images[0]['id'],
+                                        'image' : im_url
+                                    })
+                                    images = False
+                        image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
+                        i['image'] = image_url
+                        categ_id = i['categ_id'][0]
+                        im.append({
+                            'id': 0 ,
+                            'image' : image_url}
+                        )
+                        categ_name = i['categ_id'][1]
+                        products[x]['categ_name'] = categ_name
+                        products[x]['categ_id'] = categ_id
+                        products[x]['images_catalog']  = im
+                        
+                        if products[x]['tax_string']:
+                            products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
+                        products[x]['list_price'] = products[x]['list_price'] if valid_token else None
+                        im = []
+                        x += 1
+                products_res.append(products)
+                response=json.dumps({"data":{'wishlist':products_res}, 'message' : 'wishlist Details'})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
