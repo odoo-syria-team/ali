@@ -125,7 +125,9 @@ class WishList(http.Controller):
                         products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                         im = []
                         x += 1
-                products_res.append(products)
+                        print('products '  , products)
+                        products_res.append(products[0])
+                
                 response=json.dumps({"data":{'wishlist':products_res}, 'message' : 'wishlist Details'})
                 return Response(
                 response, status=200,
