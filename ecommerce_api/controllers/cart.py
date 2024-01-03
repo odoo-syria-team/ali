@@ -375,3 +375,58 @@ class Cart(http.Controller):
                 response, status=401,
                 headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
             )
+
+    @http.route('/cart/clear_cart', auth="public", csrf=False, website=True, methods=['DELETE'])
+    def clear_cart(self, **kw):
+        response = ''
+        authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        
+        try:
+            token = authe['Authorization'].replace('Bearer ', '')
+            valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read',
+                                            [[['x_studio_user_token', '=', token]]], {'fields': ['x_studio_user_name']})
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': str(e)})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        if valid_token:
+            user_id = int(valid_token[0]['x_studio_user_name'][0])
+            user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read',
+                                             [[['id', '=', user_id]]], {'fields': ['partner_id']})
+            user_partner = user_partner[0]['partner_id'][0]
+
+            user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read',
+                                          [['&', ['state', '=', 'draft'], ['partner_id', '=', user_partner]]],
+                                          {'fields': ['id','order_line']})
+            if user_quot:
+                order_id = (user_quot[0]['order_line'])
+                print('order_id  >>' , order_id)
+                for i in order_id:
+                    models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'unlink', [[i]])
+                
+                response = json.dumps({'data': 'Cart cleared successfully', 'message': 'Cart cleared'})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
+                             ('Content-Length', 100)]
+                )
+            else:
+                response = json.dumps({'data': [], 'message': "You don't have a cart"})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
+                             ('Content-Length', 100)]
+                )
+        else:
+            response = json.dumps({'data': [], 'message': 'Invalid token'})
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
+                         ('Content-Length', 100)]
+            )
