@@ -92,6 +92,7 @@ class Auth(http.Controller):
         password = body['password']
         confirm_password = body['confirm_password']
         email = body['email']
+        phone = body['phone']
         
         username_validation = self._validation(username)
         # password_validation = self._pass_validate(password)
@@ -141,13 +142,13 @@ class Auth(http.Controller):
         )
         else :
 
-            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(self.db, uid, self.password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
+            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password,'phone' : phone, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(self.db, uid, self.password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
            
             if user_id :
                 date_now = str(datetime.today())
                 key = self.generate_random_key()
                 user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_name' :key,'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
-                user_details = {"id":user_id,"username" :username,"email":email,"timestamp":date_now}
+                user_details = {"id":user_id,"username" :username,"email":email,"phone" :phone ,"timestamp":date_now}
                 
                 
               
@@ -199,7 +200,7 @@ class Auth(http.Controller):
 
                 username = user_data[0]['name']
                 date_now = str(datetime.today())
-                user_details = [{"id":user_id,"username" :username,"email":login ,"timestamp":date_now}]
+                user_details = [{"id":user_id,"username" :username,"phone" :phone ,"email":login ,"timestamp":date_now}]
                 response=json.dumps({"data":{"user":user_details[0],"token":key}, 'message':message})
                 return Response( response,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
@@ -290,7 +291,7 @@ class Auth(http.Controller):
         if 'phone' in body :
             
                 
-                fields['login']=body['phone']
+                fields['phone']=body['phone']
 
         
         try:
@@ -321,7 +322,7 @@ class Auth(http.Controller):
         
 
 
-        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name','father_name', 'email',"login"]})
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name','father_name', 'email',"login" , "phone"]})
         response = json.dumps({'data': user_data,'message':'تم تغيير معلوماتك'})
         return Response(
         response, status=200,

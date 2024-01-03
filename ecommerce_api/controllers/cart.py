@@ -52,7 +52,8 @@ class Cart(http.Controller):
             [[['product_tmpl_id', '=', product_id]]],
             {'fields': ['list_price', 'description_sale'], 'limit': 1}
         )        
-        if valid_token:
+        print("product_data " , product_data)
+        if valid_token and product_data:
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id']})
@@ -60,9 +61,26 @@ class Cart(http.Controller):
             user_partner = user_partner[0]['partner_id'][0]
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id']})
             if user_quot:
-                print("user_quot[0]['id'] " ,user_quot[0]['id'] )
-                
-                cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':user_quot[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':0.0,'product_uom_qty' : 1.0,'product_uom':'1'}])
+                user_id = int(valid_token[0]['x_studio_user_name'][0])
+                user_partner = models.execute_kw(
+                    self.db, uid, self.password, 'res.users', 'search_read',
+                    [[['id', '=', user_id]]], {'fields': ['partner_id', 'property_product_pricelist']}
+                )
+                user_product_pricelist_id = user_partner[0]['property_product_pricelist'][0]
+                user_partner = user_partner[0]['partner_id'][0]
+
+                product_price_list = models.execute_kw(
+                    self.db, uid, self.password, 'product.pricelist.item', 'search_read',
+                    [[['pricelist_id', '=', user_product_pricelist_id]]],
+                    {'fields': ['product_id', 'fixed_price']}
+                )
+
+                for product in product_data:
+                    for prod in product_price_list:
+                        if product['product_id'][0] == prod['product_id'][0]:
+                            product['list_price'] = prod['fixed_price']
+                        
+                cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':product_data[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
 
                 response=json.dumps({"data":[] , 'message' : 'Product had been added to your cart'})
                 return Response(
@@ -71,14 +89,14 @@ class Cart(http.Controller):
             )
             else:
                 cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order', 'create', [{'partner_id' :user_partner }])
-                cart_line_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id' :int(product_data[0]['id']),'order_id': cart_id ,'name':user_quot[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
+                cart_line_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id' :int(product_data[0]['id']),'order_id': cart_id ,'name':product_data[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
                 response=json.dumps({"data":[] , 'message' : 'Product had been added to your cart'})
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
             )
         else:
-            response=json.dumps({"data":[] , 'message' : 'Invalid Token'})
+            response=json.dumps({"data":[] , 'message' : 'Invalid Token or Product ID'})
             return Response(
             response, status=403,
             headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
@@ -112,11 +130,15 @@ class Cart(http.Controller):
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
             if user_quot:
                 
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom','price_unit']})
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom','price_unit','product_id']})
                 for i in user_carts:
-                    product_id = i['id']
-                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
+                    product_id = i['product_id'][0]
+                    i['cart_id'] = i['id']
+                    i['id']=product_id
+                    i['name'] = i['product_id'][1]
+                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url
+                    del i['product_id']
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
                 response, status=200,
@@ -160,11 +182,15 @@ class Cart(http.Controller):
             user_partner = user_partner[0]['partner_id'][0]
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
             if user_quot:
-                
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom','price_unit']})
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom','price_unit','product_id']})
                 id = int(user_carts[0]['id'])
-                models.execute_kw(self.db, uid, self.password, 'sale.order', 'write', [[id], {'state': 'sale'}]) 
-                models.execute_kw(self.db, uid, self.password, 'sale.order', 'write', [[id], {'state': 'done'}]) 
+                models.execute_kw(self.db, uid, self.password, 'sale.order', 'write', [[id], {'state': 'sent'}]) 
+                for i in user_carts:
+                    product_id = i['product_id'][0]
+                    i['id']=product_id
+                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
+                    i['image'] = image_url
+                    del i['product_id']
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
                 response, status=200,
@@ -210,11 +236,15 @@ class Cart(http.Controller):
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
             if user_quot:
                 result = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'unlink', [[id]])
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit']})
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:
-                    product_id = i['id']
-                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
+                    product_id = i['product_id'][0]
+                    i['cart_id'] = i['id']
+                    i['id']=product_id
+                    i['name'] = i['product_id'][1]
+                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url
+                    del i['product_id']
                 user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
@@ -261,10 +291,10 @@ class Cart(http.Controller):
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id', 'amount_total','amount_tax','amount_paid']})
             if user_quot:
                 models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[id], {'product_uom_qty': count}])    
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit']})
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:
                     product_id = i['id']
-                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image'
+                    image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
