@@ -313,3 +313,65 @@ class Cart(http.Controller):
                 return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)])
+
+
+    @http.route('/cart/my_orders', auth="public", csrf=False, website=True, methods=['GET'])
+    def get_my_orders(self, **kw):
+        response = ''
+        authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        
+        try:
+            token = authe['Authorization'].replace('Bearer ', '')
+            valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token', '=', token]]], {'fields': ['x_studio_user_name']})
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': str(e)})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        if valid_token:
+            user_id = int(valid_token[0]['x_studio_user_name'][0])
+            user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id', '=', user_id]]], {'fields': ['partner_id']})
+            user_partner = user_partner[0]['partner_id'][0]
+            
+            user_orders = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&', ['state', '!=', 'draft'], ['partner_id', '=', user_partner]]], {'fields': ['id', 'amount_total', 'amount_tax', 'amount_paid', 'state']})
+            
+            if user_orders:
+                response_orders = []
+                for order in user_orders:
+                    order_lines = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id', '=', order['id']]]], {'fields': ['id', 'name', 'product_uom', 'price_unit', 'product_id']})
+                    
+                    for line in order_lines:
+                        product_id = line['product_id'][0]
+                        line['cart_id'] = line['id']
+                        line['id'] = product_id
+                        line['name'] = line['product_id'][1]
+                        image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
+                        line['image'] = image_url
+                        del line['product_id']
+                    
+                    order['items'] = order_lines
+                    response_orders.append(order)
+                
+                response = json.dumps({"data": response_orders, 'message': 'Order Details'})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+                )
+            else:
+                response = json.dumps({"data": [], 'message': "You don't have any orders"})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+                )
+        else:
+            response = json.dumps({"data": [], 'message': 'Invalid token'})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+            )

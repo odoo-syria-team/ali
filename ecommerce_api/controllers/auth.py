@@ -187,7 +187,7 @@ class Auth(http.Controller):
             
             elif user_id:
                 user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]], {
-                                        'fields': ['name']})
+                                        'fields': ['name' , 'phone']})
                 
                 key = self.generate_random_key()
                 user_token_data = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_name' , '=' , user_id]]], {
@@ -200,13 +200,13 @@ class Auth(http.Controller):
 
                 username = user_data[0]['name']
                 date_now = str(datetime.today())
-                user_details = [{"id":user_id,"username" :username,"phone" :phone ,"email":login ,"timestamp":date_now}]
+                user_details = [{"id":user_id,"username" :username,"phone" :user_data[0]['phone'] ,"email":login ,"timestamp":date_now}]
                 response=json.dumps({"data":{"user":user_details[0],"token":key}, 'message':message})
                 return Response( response,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
             else : 
-                user_details = [{"id":user_id,"username" :username,"phone":login,"timestamp":date_now}]
+                user_details = [{"id":user_id,"username" :username,"phone" :user_data[0]['phone'] ,"email":login ,"timestamp":date_now}]
                 response=json.dumps({"data":{"user":user_details[0] ,"token":key}, 'message':message}) 
                 return Response( response, 
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)] 
