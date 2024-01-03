@@ -130,7 +130,7 @@ class Cart(http.Controller):
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
             if user_quot:
                 
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom','price_unit','product_id']})
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
                 for i in user_carts:
                     product_id = i['product_id'][0]
                     i['cart_id'] = i['id']
@@ -182,7 +182,7 @@ class Cart(http.Controller):
             user_partner = user_partner[0]['partner_id'][0]
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
             if user_quot:
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom','price_unit','product_id']})
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
                 id = int(user_carts[0]['id'])
                 models.execute_kw(self.db, uid, self.password, 'sale.order', 'write', [[id], {'state': 'sent'}]) 
                 for i in user_carts:
@@ -344,7 +344,7 @@ class Cart(http.Controller):
             if user_orders:
                 response_orders = []
                 for order in user_orders:
-                    order_lines = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id', '=', order['id']]]], {'fields': ['id', 'name', 'product_uom', 'price_unit', 'product_id']})
+                    order_lines = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id', '=', order['id']]]], {'fields': ['id', 'name', 'product_uom_qty','product_uom', 'price_unit', 'product_id']})
                     
                     for line in order_lines:
                         product_id = line['product_id'][0]
