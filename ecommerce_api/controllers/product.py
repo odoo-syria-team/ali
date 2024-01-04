@@ -533,6 +533,8 @@ class Product(http.Controller):
     @http.route('/shipping/<int:shipping_id>',  auth="public",csrf=False, website=True, methods=['POST'])
     def add_shipping_to_cart(self,shipping_id, **kw):
         response = ''
+        body =json.loads(request.httprequest.data)
+        term = body['term']
         authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url), allow_none=True)
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url), allow_none=True)
@@ -551,8 +553,6 @@ class Product(http.Controller):
         if valid_token:
             shipping_id = models.execute_kw(self.db, uid, self.password, 'delivery.carrier', 'search_read', [[['id' , '=' , shipping_id]]],{'fields':['id','name','delivery_type','fixed_price', 'free_over','amount','product_id']})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
-            print('shipping_id >>>>>>' , shipping_id) 
-            print('shipping_id >>>>>>' , shipping_id[0]['name'])
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
             user_product_pricelist_id =user_partner[0]['property_product_pricelist'][0] 
             user_partner = user_partner[0]['partner_id'][0]
@@ -560,14 +560,44 @@ class Product(http.Controller):
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id']})
             if user_quot:
                 
-                print('user_quot' , user_quot[0]['id'])
                 
                 try:
-                    product_ship_id =  models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '=' , shipping_id[0]['product_id'][0]]]],{'fields':['lst_price' , 'product_tmpl_id']})
+                    product_ship_id =  models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '=' , shipping_id[0]['product_id'][0]]]],{'fields':['list_price']})
                     print('product_ship_id' , product_ship_id)
-                    product_ship_temp_id =  models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '=' , int(product_ship_id[0]['product_tmpl_id'][0])]]],{'fields':['list_price']})
+                    product_ship_temp_id =  models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '=' , int(product_ship_id[0]['id'])]]],{'fields':['list_price']})
                     print('product_ship_id' , product_ship_id)
                     cart_line_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id' :shipping_id[0]['product_id'][0],'order_id': user_quot[0]['id'] ,'name':shipping_id[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit' :product_ship_temp_id[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
+                except Exception as e: 
+                    response=json.dumps({"data":[],"message":str(e)})
+                    return Response(
+                    response, status=403,
+                    headers=[('Content-Type', 'application/json'), ('Accept', 'application/json')]
+                )
+                try:
+                    user_id =int(valid_token[0]['x_studio_user_name'][0])
+
+                    user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id']})
+
+                    user_partner = user_partner[0]['partner_id'][0]
+                    user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id','message_ids']})
+                    if user_quot:
+                        
+                        log_note = {
+                            'body': 'The customer has selected %s to make the payment.' % term,
+                            'model': 'sale.order',
+                            'res_id': user_quot[0]['id'],
+                            'message_type': 'comment',
+                        }
+
+                        # Append the log note to the existing messages
+                        existing_messages = user_quot[0]['message_ids'].append((0, 0, log_note))
+                        
+                        id = int(user_quot[0]['id'])
+                        # Update the chatter field of the sale order with the updated messages
+                        x = models.execute_kw(self.db,uid,self.password,'mail.message','create', [{'body': 'The customer has selected %s to make the payment.' % term,
+                            'model': 'sale.order',
+                            'res_id': user_quot[0]['id'],
+                            'message_type': 'comment',}])
                 except Exception as e: 
                     response=json.dumps({"data":[],"message":str(e)})
                     return Response(

@@ -53,7 +53,13 @@ class Cart(http.Controller):
             {'fields': ['list_price', 'description_sale'], 'limit': 1}
         )        
         print("product_data " , product_data)
-        if valid_token and product_data:
+        if not product_data :
+            response=json.dumps({"data":[] , 'message' : 'Product ID is not correct'})
+            return Response(
+            response, status=400,
+            headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+            )
+        if valid_token :
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id']})
@@ -79,8 +85,14 @@ class Cart(http.Controller):
                     for prod in product_price_list:
                         if product['product_id'][0] == prod['product_id'][0]:
                             product['list_price'] = prod['fixed_price']
-                        
-                cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':product_data[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
+                
+                cart_count= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read',[['&',['product_id', '=', product_data[0]['id']],['order_id', '=', int(user_quot[0]['id']) ]]],{'fields' :['product_uom_qty']} )
+                print(cart_count)
+                if cart_count:
+                    qty = cart_count[0]['product_uom_qty'] + 1
+                    models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[int(cart_count[0]['id'])], {'product_uom_qty': qty}])
+                else:
+                    cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':product_data[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
 
                 response=json.dumps({"data":[] , 'message' : 'Product had been added to your cart'})
                 return Response(
@@ -96,7 +108,7 @@ class Cart(http.Controller):
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
             )
         else:
-            response=json.dumps({"data":[] , 'message' : 'Invalid Token or Product ID'})
+            response=json.dumps({"data":[] , 'message' : 'Invalid Token'})
             return Response(
             response, status=403,
             headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]

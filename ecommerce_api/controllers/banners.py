@@ -71,8 +71,8 @@ class Banners(http.Controller):
             headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
         )
 
-    @http.route('/cart/addres',  auth="public",csrf=False, website=True, methods=['GET'])
-    def add_address_to_cart(self, **kw):
+    @http.route('/cart/extra_info',  auth="public",csrf=False, website=True, methods=['GET'])
+    def add_extra_info(self, **kw):
         response = ''            
         body =json.loads(request.httprequest.data)
         po_ref = body.get('reference', False)
@@ -132,4 +132,73 @@ class Banners(http.Controller):
                 return Response(
                 response, status=403,
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+            )
+
+    @http.route('/cart/save_address', auth="public", csrf=False, website=True, methods=['POST'])
+    def save_address(self, **kw):
+        response = ''
+        body = json.loads(request.httprequest.data)
+        street1 = body.get('street1')
+        phone = body.get('phone')
+        street2 = body.get('street2')
+        city = body.get('city')
+        country_id = body.get('country_id')
+
+        if not (phone):
+            response = json.dumps({'data': [], 'message': 'Missing required fields'})
+            return Response(
+                response, status=400,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url), allow_none=True)
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url), allow_none=True)
+        uid = common.authenticate(self.db, self.username, self.password, {})
+
+        try:
+            token = request.httprequest.headers.get('Authorization', '').replace('Bearer ', '')
+            valid_token = models.execute_kw(
+                self.db, uid, self.password, 'x_user_token', 'search_read',
+                [[['x_studio_user_token', '=', token]]],
+                {'fields': ['x_studio_user_name']}
+            )
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': 'Unauthorized!'})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        if valid_token:
+            try:
+                user_id = int(valid_token[0]['x_studio_user_name'][0])
+                user_partner = models.execute_kw(
+                    self.db, uid, self.password, 'res.users', 'search_read',
+                    [[['id', '=', user_id]]],
+                    {'fields': ['partner_id']}
+                )
+                user_partner = user_partner[0]['partner_id'][0]
+
+                # Update the partner record with the new address details
+                models.execute_kw(
+                    self.db, uid, self.password, 'res.partner', 'write',
+                    [[user_partner], {'phone':phone,'street': street1, 'street2': street2, 'city': city, 'country_id': country_id}]
+                )
+
+                response = json.dumps({'data': {'partner_id': user_partner}, 'message': 'Address saved successfully'})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+            except Exception as e:
+                response = json.dumps({'data': [], 'message': str(e)})
+                return Response(
+                    response, status=500,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+        else:
+            response = json.dumps({'data': [], 'message': 'Invalid Token'})
+            return Response(
+                response, status=403,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
