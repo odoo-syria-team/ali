@@ -134,15 +134,18 @@ class Banners(http.Controller):
                 headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
             )
 
-    @http.route('/cart/save_address', auth="public", csrf=False, website=True, methods=['POST'])
-    def save_address(self, **kw):
+    @http.route('/cart/add_address', auth="public", csrf=False, website=True, methods=['POST'])
+    def add_address(self, **kw):
         response = ''
         body = json.loads(request.httprequest.data)
-        street1 = body.get('street1')
-        phone = body.get('phone')
-        street2 = body.get('street2')
-        city = body.get('city')
-        country_id = body.get('country_id')
+        name = body.get('name' , False)
+        email = body.get('email',False)
+        street1 = body.get('street1' , False)
+        phone = body.get('phone' ,False)
+        street2 = body.get('street2' , False)
+        city = body.get('city' , False)
+        zip = body.get('zip' , False)
+        country_id = body.get('country_id' ,False)
 
         if not (phone):
             response = json.dumps({'data': [], 'message': 'Missing required fields'})
@@ -180,11 +183,33 @@ class Banners(http.Controller):
                 user_partner = user_partner[0]['partner_id'][0]
 
                 # Update the partner record with the new address details
-                models.execute_kw(
-                    self.db, uid, self.password, 'res.partner', 'write',
-                    [[user_partner], {'phone':phone,'street': street1, 'street2': street2, 'city': city, 'country_id': country_id}]
+                # models.execute_kw(
+                #     self.db, uid, self.password, 'res.partner', 'write',
+                #     [[user_partner], {'phone':phone,'street': street1, 'street2': street2, 'city': city, 'country_id': country_id}]
+                # )
+                delivery_address_data = {
+                    'parent_id': user_partner,
+                    'name': name,
+                    'street': street1,
+                    'street2': street2,
+                    'city': city,
+                    'zip': zip,
+                    'type' : "delivery",    
+                    'country_id': 1,  # Country ID, e.g., 1 for United States
+                    'phone': phone,
+                    'email': email
+                }
+
+                # Create the delivery address
+                address_id = models.execute_kw(
+                    self.db, uid, self.password,
+                    'res.partner', 'create',
+                    [delivery_address_data]
                 )
 
+                user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
+                if user_quot:
+                    models.execute_kw(self.db, uid, self.password, 'sale.order', 'write', [[user_quot[0]['id']], {'partner_shipping_id': address_id}]) 
                 response = json.dumps({'data': {'partner_id': user_partner}, 'message': 'Address saved successfully'})
                 return Response(
                     response, status=200,
