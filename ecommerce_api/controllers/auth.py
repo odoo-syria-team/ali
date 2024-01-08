@@ -322,3 +322,44 @@ class Auth(http.Controller):
         response, status=200,
         headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
     )   
+
+
+
+
+    @http.route('/auth/delete_account', auth="public", csrf=False, website=True, methods=['POST'])
+    def delete_account(self, idd=None, **kw):
+        try:
+            authe = request.httprequest.headers
+
+            common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+            uid = common.authenticate(self.db, self.username, self.password, {})
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+
+            token = authe['Authorization'].replace('Bearer ', '')
+            user_token_data = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token', '=', token]]], {
+                                        'fields': ['x_studio_user_name']})
+            print(int(user_token_data[0]['x_studio_user_name'][0]))
+            user_id = int(user_token_data[0]['x_studio_user_name'][0])
+            if user_token_data:
+                x = models.execute_kw(self.db, uid, self.password, 'res.users', 'unlink', [[user_id]])
+                print(x)
+                
+            
+
+                response = {"data": [], 'message': 'Account deleted successfully'}
+                return Response(
+                    json.dumps(response), status=200,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
+                )
+            else:
+                response = {"data": [], 'message': 'Invalid Token'}
+                return Response(
+                    json.dumps(response), status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
+                )
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': str(e)})
+            return Response(
+                response, status=403,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
+            )
