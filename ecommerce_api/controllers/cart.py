@@ -146,8 +146,11 @@ class Cart(http.Controller):
                 for i in user_carts:
                     product_id = i['product_id'][0]
                     i['cart_id'] = i['id']
+                    products =models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read',
+                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
                     i['id']=product_id
                     i['name'] = i['product_id'][1]
+                    i['x_studio_product_feature_mobile'] = products[0]['x_studio_product_feature_mobile']
                     image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url
                     del i['product_id']
@@ -305,9 +308,16 @@ class Cart(http.Controller):
                 models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[id], {'product_uom_qty': count}])    
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:
-                    product_id = i['id']
+                    product_id = i['product_id'][0]
+                    i['cart_id'] = i['id']
+                    products =models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read',
+                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
+                    i['id']=product_id
+                    i['name'] = i['product_id'][1]
+                    i['x_studio_product_feature_mobile'] = products[0]['x_studio_product_feature_mobile']
                     image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url
+                    del i['product_id']
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
                 response, status=200,
