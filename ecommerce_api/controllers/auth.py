@@ -252,12 +252,15 @@ class Auth(http.Controller):
         
 
         authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))  
         fields = {}
         try:
             token = authe['Authorization'].replace('Bearer ', '')
             valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
         except Exception as e:
-            response = json.dumps({ 'data': 'no data', 'message': 'Unauthorized!'})
+            response = json.dumps({ 'data': 'no data', 'message': str(e)})
             return Response(
             response, status=401,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
@@ -267,9 +270,7 @@ class Auth(http.Controller):
 
         
         change_phone =False
-        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
-        uid = common.authenticate(self.db, self.username, self.password, {})
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))        
+              
         body =json.loads(request.httprequest.data)
 
         
@@ -279,7 +280,7 @@ class Auth(http.Controller):
         if 'name' in body:
             
             
-            fields['name']=body['full_name']
+            fields['name']=body['name']
 
             
         if 'phone' in body :
@@ -287,26 +288,8 @@ class Auth(http.Controller):
                 
                 fields['phone']=body['phone']
 
-        
-        try:
-            
-            user_id = common.authenticate(self.db,login, password, {})
-        except:
-            
-            response = json.dumps({'data':[], 'message': 'كلمة المرور غير صحيحة  '})
-            return Response(response,
-        status=403,
-        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-    )
-        
-        
-        if not user_id :
-            response = json.dumps({'data':[], 'message': 'كلمة المرور غير صحيحة  '})
-            return Response(response,
-        status=403,
-        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-    )
-        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['login','name'"phone"]})
+        id = int(valid_token[0]['x_studio_user_name'][0])
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['login','name',"phone"]})
 
     
             
@@ -316,7 +299,7 @@ class Auth(http.Controller):
         
 
 
-        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name','father_name', 'email',"login" , "phone"]})
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name',"login" , "phone"]})
         response = json.dumps({'data': user_data,'message':'تم تغيير معلوماتك'})
         return Response(
         response, status=200,
