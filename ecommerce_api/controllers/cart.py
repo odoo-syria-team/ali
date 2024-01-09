@@ -149,7 +149,9 @@ class Cart(http.Controller):
                     products =models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read',
                                             [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
                     i['id']=product_id
-                    i['name'] = i['product_id'][1]
+                    i['name'] = i['product_id'][1]                      
+                    categ_name = i['categ_id'][1]
+                    i['categ_name'] = categ_name
                     i['x_studio_product_feature_mobile'] = products[0]['x_studio_product_feature_mobile']
                     image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url

@@ -333,7 +333,7 @@ class Product(http.Controller):
         
         if valid_token:
             
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '!=' , 0]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string'], 'limit': 25 ,'order': 'id desc'})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , 347]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string'], 'limit': 25 ,'order': 'id desc'})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -348,7 +348,7 @@ class Product(http.Controller):
                     if product['product_id'][0] == prod['product_id'][0] :
                         product['list_price'] = prod['fixed_price']
         else:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '!=' , 0]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , 347]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string'], 'limit': 25 ,'order': 'id desc'})
         x = 0
         for i in products:
             
