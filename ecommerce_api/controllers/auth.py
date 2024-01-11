@@ -265,11 +265,7 @@ class Auth(http.Controller):
             response, status=401,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
-
-
-
-        
-        change_phone =False
+        date_now = str(datetime.today())
               
         body =json.loads(request.httprequest.data)
 
@@ -300,7 +296,8 @@ class Auth(http.Controller):
 
 
         user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name',"login" , "phone"]})
-        response = json.dumps({'data': user_data,'message':'تم تغيير معلوماتك'})
+        user_details = [{"id":user_id,"username" :user_data[0]['username'],"phone" :user_data[0]['phone'] ,"email":user_data[0]['login'] ,"timestamp":date_now}]
+        response = json.dumps({'data': user_details,'message':'تم تغيير معلوماتك'})
         return Response(
         response, status=200,
         headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
