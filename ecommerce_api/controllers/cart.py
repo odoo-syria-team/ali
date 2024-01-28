@@ -30,6 +30,15 @@ class Cart(http.Controller):
     username ='marketing@gtecsecurity.co.uk'
     password = 'GTECWeb$ite'
 
+
+    def extract_float_value(self,string):
+        pattern = r"[-+]?\d*\.\d+|\d+"  # Regular expression pattern to match float or integer values
+        match = re.search(pattern, string)
+        if match:
+            float_value = float(match.group())
+            return float_value
+        else:
+            return None
     @http.route('/cart/<int:product_id>',  auth="public",csrf=False, website=True, methods=['POST'])
     def add_item_to_cart(self,product_id, **kw):
         response = ''            
@@ -50,9 +59,8 @@ class Cart(http.Controller):
         product_data = models.execute_kw(
             self.db, uid, self.password, 'product.product', 'search_read',
             [[['product_tmpl_id', '=', product_id]]],
-            {'fields': ['list_price', 'description_sale'], 'limit': 1}
+            {'fields': ['list_price', 'description_sale','tax_string'], 'limit': 1}
         )        
-        print("product_data " , product_data)
         if not product_data :
             response=json.dumps({"data":[] , 'message' : 'Product ID is not correct'})
             return Response(
@@ -85,9 +93,13 @@ class Cart(http.Controller):
                     for prod in product_price_list:
                         if product['product_id'][0] == prod['product_id'][0]:
                             product['list_price'] = prod['fixed_price']
+                        else :
+                            if products['tax_string']:
+                                product['list_price'] = self.extract_float_value(products['tax_string'])
+                            
+                             
                 
                 cart_count= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read',[['&',['product_id', '=', product_data[0]['id']],['order_id', '=', int(user_quot[0]['id']) ]]],{'fields' :['product_uom_qty']} )
-                print(cart_count)
                 if cart_count:
                     qty = cart_count[0]['product_uom_qty'] + 1
                     models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[int(cart_count[0]['id'])], {'product_uom_qty': qty}])
@@ -149,13 +161,15 @@ class Cart(http.Controller):
                     products =models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read',
                                             [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
                     i['id']=product_id
-                    i['name'] = i['product_id'][1]                      
+                    i['name'] = i['product_id'][1]     
+                    i['list_price'] = i['price_unit']   
                     categ_name = products[0]['categ_id'][1]
                     i['categ_name'] = categ_name
                     i['x_studio_product_feature_mobile'] = products[0]['x_studio_product_feature_mobile']
                     image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
                     i['image'] = image_url
                     del i['product_id']
+                    del i['price_unit'] 
                 response=json.dumps({"data":{'items':user_carts,'invoice':user_quot}, 'message' : 'Cart Details'})
                 return Response(
                 response, status=200,
@@ -453,4 +467,79 @@ class Cart(http.Controller):
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
                          ('Content-Length', 100)]
+            )
+
+    @http.route('/cart/invoice_details', auth='public', methods=['GET'], csrf=False)
+    def get_invoice_details(self, **params):
+        response = ''
+        authe = request.httprequest.headers
+        valid_token = ''
+        try:
+            token = authe['Authorization'].replace('Bearer ', '')
+            valid_token = request.env['user.token.nasaem'].search([('token', '=', token)])
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': 'Unauthorized!'})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        if valid_token:
+            try:
+                dec_token = jwt.decode(token, "ali.ammar", algorithms=["HS256"])
+            except Exception as e:
+                response = json.dumps({'jsonrpc': '2.0', 'message': 'Unauthorized!'})
+                return Response(
+                    response, status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+
+            user_id = valid_token[0]['user_id']
+            user_partner = request.env['res.users'].sudo().search_read(
+                [['id', '=', user_id]]
+            )
+            user_partner = user_partner[0]['partner_id']
+            sale_order = request.env['sale.order'].sudo().search([
+                ('partner_id', '=', user_partner[0]),
+                ('state', 'in', ['draft', 'sent']),
+                ('website_id', '=', 1)  # Filter by cart states (e.g., draft, sent)
+            ], limit=1)
+
+            if sale_order:
+                invoice = sale_order.invoice_ids.filtered(lambda inv: inv.state != 'cancel')
+                if invoice:
+                    invoice = invoice[0]
+                    # Construct the invoice details response
+                    invoice_details = {
+                        'invoice_id': invoice.id,
+                        'amount_total': invoice.amount_total,
+                        'amount_tax': invoice.amount_tax,
+                        'amount_paid': invoice.amount_paid,
+                        # Include other invoice details as needed
+                    }
+                    response = json.dumps({"data": invoice_details, 'message': 'Invoice Details'})
+                    return Response(
+                        response, status=200,
+                        headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
+                                ('Content-Length', 100)]
+                    )
+                else:
+                    response = json.dumps({"data": [], 'message': "No invoice found for the cart"})
+                    return Response(
+                        response, status=200,
+                        headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
+                                ('Content-Length', 100)]
+                    )
+            else:
+                response = json.dumps({"data": [], 'message': 'Cart not found'})
+                return Response(
+                    response, status=404,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'),
+                            ('Content-Length', 100)]
+                )
+        else:
+            response = json.dumps({"data": [], 'message': 'Invalid token'})
+            return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
             )
