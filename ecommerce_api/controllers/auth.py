@@ -92,9 +92,10 @@ class Auth(http.Controller):
         password = body['password']
         confirm_password = body['confirm_password']
         email = body['email']
+        phone = body['phone']
         
         username_validation = self._validation(username)
-        password_validation = self._pass_validate(password)
+        # password_validation = self._pass_validate(password)
         email_validation = self.check_email(email)
         if confirm_password != password:
             response = json.dumps({"data":[],'message': 'Make sure your passwor and confirm password are the same'})
@@ -115,13 +116,7 @@ class Auth(http.Controller):
             response, status=422,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
-        
-        if password_validation == None:
-            response = json.dumps({"data":[],'message': 'يرجى إدخال كلمة المرور تحتوي على 8 محارف على الأقل و حرف كبير و حرف صغير و رمز ولاتحتوي على فراغات'})
-            return Response(
-            response, status=422,
-            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-        )
+    
         uid = False
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
@@ -141,13 +136,13 @@ class Auth(http.Controller):
         )
         else :
 
-            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(self.db, uid, self.password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
+            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password,'phone' : phone, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(self.db, uid, self.password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
            
             if user_id :
                 date_now = str(datetime.today())
                 key = self.generate_random_key()
                 user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_name' :key,'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
-                user_details = {"id":user_id,"username" :username,"email":email,"timestamp":date_now}
+                user_details = {"id":user_id,"username" :username,"email":email,"phone" :phone ,"timestamp":date_now}
                 
                 
               
@@ -186,7 +181,7 @@ class Auth(http.Controller):
             
             elif user_id:
                 user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]], {
-                                        'fields': ['name']})
+                                        'fields': ['name' , 'phone']})
                 
                 key = self.generate_random_key()
                 user_token_data = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_name' , '=' , user_id]]], {
@@ -199,13 +194,13 @@ class Auth(http.Controller):
 
                 username = user_data[0]['name']
                 date_now = str(datetime.today())
-                user_details = [{"id":user_id,"username" :username,"email":login ,"timestamp":date_now}]
+                user_details = [{"id":user_id,"username" :username,"phone" :user_data[0]['phone'] ,"email":login ,"timestamp":date_now}]
                 response=json.dumps({"data":{"user":user_details[0],"token":key}, 'message':message})
                 return Response( response,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
             else : 
-                user_details = [{"id":user_id,"username" :username,"phone":login,"timestamp":date_now}]
+                user_details = [{"id":user_id,"username" :username,"phone" :user_data[0]['phone'] ,"email":login ,"timestamp":date_now}]
                 response=json.dumps({"data":{"user":user_details[0] ,"token":key}, 'message':message}) 
                 return Response( response, 
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)] 
@@ -232,6 +227,106 @@ class Auth(http.Controller):
                 )
                 print('1')
                 response = {"data": [], 'message': 'You have been logged out'}
+                return Response(
+                    json.dumps(response), status=200,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
+                )
+            else:
+                response = {"data": [], 'message': 'Invalid Token'}
+                return Response(
+                    json.dumps(response), status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
+                )
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': str(e)})
+            return Response(
+                response, status=403,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
+            )
+
+
+
+
+    @http.route('/edit_profile',  auth="public",csrf=False, website=True, methods=['POST'])
+    def edit_profile(self, **kw):
+        
+
+        authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))  
+        fields = {}
+        try:
+            token = authe['Authorization'].replace('Bearer ', '')
+            valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+        except Exception as e:
+            response = json.dumps({ 'data': 'no data', 'message': str(e)})
+            return Response(
+            response, status=401,
+            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+        )
+        date_now = str(datetime.today())
+              
+        body =json.loads(request.httprequest.data)
+
+        
+
+        
+            
+        if 'name' in body:
+            
+            
+            fields['name']=body['name']
+
+            
+        if 'phone' in body :
+            
+                
+                fields['phone']=body['phone']
+
+        id = int(valid_token[0]['x_studio_user_name'][0])
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['login','name',"phone"]})
+
+    
+            
+            
+        c=models.execute_kw(self.db, uid, self.password, 'res.users', 'write', [[id], fields])
+        
+        
+
+
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name',"login" , "phone"]})
+        user_details = [{"id":user_data[0]['id'],"username" :user_data[0]['name'],"phone" :user_data[0]['phone'] ,"email":user_data[0]['login'] ,"timestamp":date_now}]
+        response = json.dumps({'data': user_details,'message':'تم تغيير معلوماتك'})
+        return Response(
+        response, status=200,
+        headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+    )   
+
+
+
+
+    @http.route('/auth/delete_account', auth="public", csrf=False, website=True, methods=['POST'])
+    def delete_account(self, idd=None, **kw):
+        try:
+            authe = request.httprequest.headers
+
+            common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+            uid = common.authenticate(self.db, self.username, self.password, {})
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+
+            token = authe['Authorization'].replace('Bearer ', '')
+            user_token_data = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token', '=', token]]], {
+                                        'fields': ['x_studio_user_name']})
+            print(int(user_token_data[0]['x_studio_user_name'][0]))
+            user_id = int(user_token_data[0]['x_studio_user_name'][0])
+            if user_token_data:
+                x = models.execute_kw(self.db, uid, self.password, 'res.users', 'unlink', [[user_id]])
+                print(x)
+                
+            
+
+                response = {"data": [], 'message': 'Account deleted successfully'}
                 return Response(
                     json.dumps(response), status=200,
                     headers=[('Content-Type', 'application/json'), ('Content-Length', len(response))]
