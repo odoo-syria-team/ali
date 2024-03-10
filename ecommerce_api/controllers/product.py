@@ -15,6 +15,8 @@ import socket
 from os import path
 import random
 import string
+import base64
+
 
 _logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class Product(http.Controller):
             return float_value
         else:
             return None
+        
     @http.route('/search',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_search(self,page=None,term=None ):
         response = ''
@@ -87,7 +90,7 @@ class Product(http.Controller):
                     domain.append(['name', 'ilike', term])
                     # domain.append(['description_sale', 'ilike', term])
                 
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_product_feature_mobile','tax_string'] , 'limit':limit, 'offset':(page - 1) * limit})
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_sku' ,'x_studio_breif' ,'x_studio_features', 'x_studio_video' ,'x_studio_product_feature_mobile','tax_string'] , 'limit':limit, 'offset':(page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
 
             # cat_id = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read', [[['name', 'ilike', term]for term in term_list]],{'fields':['id','name' ] , 'limit':limit, 'offset':(page - 1) * limit})
@@ -127,7 +130,62 @@ class Product(http.Controller):
             )
                     
     
+    
+        
+    @http.route('/search/product/convertpdf',  auth="public",csrf=False, website=True, methods=['GET'])
+    def get_search_product_convert_pdf(self):
+        response = ''
+        valid_token = False
+        authe = request.httprequest.headers
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        uid = common.authenticate(self.db,self.username, self.password, {})
+        if authe:
+                if 'Authorization' in authe:
+                    token = authe['Authorization'].replace('Bearer ', '')
+                    valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
+                else :
+                    pass
+        
+        if uid:                
+            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [],{'fields':['id', 'x_studio_pdf_link']})
 
+            for product in product_ids:
+                product_id = product['id']
+                if product.get('x_studio_pdf_link'):
+                    response = requests.get(product.get('x_studio_pdf_link'))
+                    if response.status_code == 200:
+                        pdf_binary = base64.b64encode(response.content)
+                        models.execute_kw(self.db,
+                            uid,
+                            self.password, 
+                            'product.template', 
+                            'write', 
+                            [
+                                [product_id], {
+                                    'attribute_line_ids': [(0, 0, {
+                                        'x_studio_pdf': pdf_binary,
+                                    })]
+                                }
+                        ])
+                    else:
+                        # Handle invalid URL or other errors
+                        pass
+                
+            try:
+                response = json.dumps({"data":[],'message': 'All product'})
+                return Response(
+                response, status=200,
+                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+        )
+
+            except:
+                response = json.dumps({"data":[],'message': 'No products for this Term'})
+                return Response(
+                response, status=404,
+                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+            )
+                    
 
 
     @http.route('/categories/all', auth="public", cors="*", csrf=False, website=True, methods=['GET'])
@@ -253,7 +311,7 @@ class Product(http.Controller):
 
        
         if valid_token:
-            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
+            products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['public_categ_ids' , '=' , category_id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_sku' ,'x_studio_breif' ,'x_studio_features', 'x_studio_video' ,'x_studio_product_feature_mobile','tax_string']})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
 
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -335,7 +393,7 @@ class Product(http.Controller):
             id = crm_tag[0]['id']
             if valid_token:
                 
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_sku' ,'x_studio_breif' ,'x_studio_features', 'x_studio_video' ,'x_studio_product_feature_mobile','tax_string']})
                 user_id =int(valid_token[0]['x_studio_user_name'][0])
 
                 user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
@@ -350,7 +408,7 @@ class Product(http.Controller):
                         if product['product_id'][0] == prod['product_id'][0] :
                             product['list_price'] = prod['fixed_price']
             else:
-                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when','x_studio_product_feature_mobile','tax_string']})
+                products = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['product_tag_ids' , '=' , id]]],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_sku' ,'x_studio_breif' ,'x_studio_features', 'x_studio_video' ,'x_studio_product_feature_mobile','tax_string']})
             x = 0
             for i in products:
                 
