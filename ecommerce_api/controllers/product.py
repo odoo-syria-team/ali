@@ -135,56 +135,54 @@ class Product(http.Controller):
     @http.route('/search/product/convertpdf',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_search_product_convert_pdf(self):
         response = ''
-        valid_token = False
-        authe = request.httprequest.headers
-        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
-        uid = common.authenticate(self.db,self.username, self.password, {})
-        if authe:
-                if 'Authorization' in authe:
-                    token = authe['Authorization'].replace('Bearer ', '')
-                    valid_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'search_read', [[['x_studio_user_token' , '=' , token]]],{'fields':['x_studio_user_name']})
-                else :
-                    pass
-        
-        if uid:                
-            product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [],{'fields':['id', 'x_studio_pdf_link']})
-
-            for product in product_ids:
-                product_id = product['id']
-                if product.get('x_studio_pdf_link'):
-                    response = requests.get(product.get('x_studio_pdf_link'))
-                    if response.status_code == 200:
-                        pdf_binary = base64.b64encode(response.content)
-                        models.execute_kw(self.db,
-                            uid,
-                            self.password, 
-                            'product.template', 
-                            'write', 
-                            [
-                                [product_id], {
-                                    'attribute_line_ids': [(0, 0, {
-                                        'x_studio_pdf': pdf_binary,
-                                    })]
-                                }
-                        ])
-                    else:
-                        # Handle invalid URL or other errors
-                        pass
+        try:
+            common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+            uid = common.authenticate(self.db,self.username, self.password, {})
+            
+            if uid:                
+                domain =[]
+                domain.append(['x_studio_pdf_link', '!=', False])
+                domain.append(['x_studio_pdf', '=', False])
+                product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain], {'fields':['id', 'x_studio_pdf_link'], 'limit':100})
                 
-            try:
-                response = json.dumps({"data":[],'message': 'All product'})
-                return Response(
-                response, status=200,
-                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
-        )
-
-            except:
-                response = json.dumps({"data":[],'message': 'No products for this Term'})
-                return Response(
-                response, status=404,
-                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+                for product in product_ids:
+                    print('=======================', product)
+                    product_id = product['id']
+                    
+                    print('=========2==============', product_id, type(product_id))
+                    if product.get('x_studio_pdf_link'):
+                        print('/////////////////', product.get('x_studio_pdf_link'))
+                        response = requests.get(product.get('x_studio_pdf_link'))
+                        if response.status_code == 200:
+                            pdf_binary = base64.b64encode(response.content)
+                            
+                            # print('-------------------', pdf_binary)
+                            models.execute_kw(self.db, uid, self.password, 
+                                'product.template', 
+                                'write', [[product_id], {'x_studio_pdf': pdf_binary}]
+                                )
+                        else:
+                            # Handle invalid URL or other errors
+                            pass
+                    
+                try:
+                    response = json.dumps({"data":[],'message': 'All product'})
+                    return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
             )
+
+                except:
+                    response = json.dumps({"data":[],'message': 'No products for this Term'})
+                    return Response(
+                    response, status=404,
+                    headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
+                )
+
+        except Exception as e:
+            response = json.dumps({"data": [], 'message': str(e)})
+            return Response(response, status=500, headers=[('Content-Type', 'application/json')])
                     
 
 
