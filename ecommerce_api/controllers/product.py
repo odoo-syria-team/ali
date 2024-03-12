@@ -109,6 +109,31 @@ class Product(http.Controller):
             x = 0
             for product in product_ids:
                 product_id = product['id']
+
+                att_domain = []
+                att_domain.append(['product_tmpl_id', '=', product_id])
+                attribute_line_ids = models.execute_kw(self.db, uid, self.password, 'product.template.attribute.line',
+                                                       'search_read', [att_domain], {
+                                                           'fields': ['id', 'attribute_id', 'value_ids']})
+
+                lines = []
+                for attribute_line_id in attribute_line_ids:
+                    value_id_domain = []
+                    value_id_domain.append(['id', 'in', attribute_line_id['value_ids']])
+
+                    value_ids = models.execute_kw(self.db, uid, self.password, 'product.attribute.value',
+                                                  'search_read', [value_id_domain], {
+                                                      'fields': ['id', 'name']})
+
+                    lines.append({
+                        'attribute': {
+                            'id': attribute_line_id['attribute_id'][0],
+                            'name': attribute_line_id['attribute_id'][1],
+                        },
+                        'values': value_ids
+                    })
+                product['attribute_line_ids'] = lines
+
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(
                     product_id) + '&field=image_1920'
                 product['image'] = image_url
@@ -340,6 +365,7 @@ class Product(http.Controller):
                                                    [[['pricelist_id', '=', user_product_pricelist_id]]],
                                                    {'fields': ['product_id', 'fixed_price']})
             for product in products:
+
                 for prod in product_price_list:
                     if product['product_id'][0] == prod['product_id'][0]:
                         product['list_price'] = prod['fixed_price']
@@ -353,6 +379,31 @@ class Product(http.Controller):
         for i in products:
 
             product_id = i['id']
+
+            att_domain = []
+            att_domain.append(['product_tmpl_id', '=', product_id])
+            attribute_line_ids = models.execute_kw(self.db, uid, self.password, 'product.template.attribute.line',
+                                                   'search_read', [att_domain], {
+                                                       'fields': ['id', 'attribute_id', 'value_ids']})
+
+            lines = []
+            for attribute_line_id in attribute_line_ids:
+                value_id_domain = []
+                value_id_domain.append(['id', 'in', attribute_line_id['value_ids']])
+
+                value_ids = models.execute_kw(self.db, uid, self.password, 'product.attribute.value',
+                                              'search_read', [value_id_domain], {
+                                                  'fields': ['id', 'name']})
+
+                lines.append({
+                    'attribute': {
+                        'id': attribute_line_id['attribute_id'][0],
+                        'name': attribute_line_id['attribute_id'][1],
+                    },
+                    'values': value_ids
+                })
+            i['attribute_line_ids'] = lines
+
             image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
             categ_id = i['categ_id'][0]
@@ -455,6 +506,29 @@ class Product(http.Controller):
             for i in products:
 
                 product_id = i['id']
+                att_domain = []
+                att_domain.append(['product_tmpl_id', '=', product_id])
+                attribute_line_ids = models.execute_kw(self.db, uid, self.password, 'product.template.attribute.line',
+                                                       'search_read', [att_domain], {
+                                                           'fields': ['id', 'attribute_id', 'value_ids']})
+
+                lines = []
+                for attribute_line_id in attribute_line_ids:
+                    value_id_domain = []
+                    value_id_domain.append(['id', 'in', attribute_line_id['value_ids']])
+
+                    value_ids = models.execute_kw(self.db, uid, self.password, 'product.attribute.value',
+                                                  'search_read', [value_id_domain], {
+                                                      'fields': ['id', 'name']})
+
+                    lines.append({
+                        'attribute': {
+                            'id': attribute_line_id['attribute_id'][0],
+                            'name': attribute_line_id['attribute_id'][1],
+                        },
+                        'values': value_ids
+                    })
+                i['attribute_line_ids'] = lines
                 image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(
                     product_id) + '&field=image_1920'
                 i['image'] = image_url
@@ -523,6 +597,9 @@ class Product(http.Controller):
                 [[['id', '=', product_id]]],
                 {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price',
                             'description_sale', 'x_studio_specifications', 'x_studio_why_and_when',
+                            'x_studio_sku', 'x_studio_breif', 'x_studio_features',
+                            'x_studio_pdf',
+                            'x_studio_video',
                             'product_template_image_ids', 'x_studio_product_feature_mobile', 'tax_string'],
                  'offset': (page - 1) * 5, 'limit': 5}
             )
@@ -549,7 +626,9 @@ class Product(http.Controller):
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
                 {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'description_sale',
-                            'x_studio_specifications', 'x_studio_why_and_when', 'product_template_image_ids',
+                            'x_studio_specifications', 'x_studio_why_and_when',
+                            'x_studio_sku', 'x_studio_breif', 'x_studio_features',
+                            'x_studio_pdf', 'x_studio_video', 'product_template_image_ids',
                             'x_studio_product_feature_mobile', 'tax_string'], 'offset': (page - 1) * 5,
                  'limit': 5}
             )
@@ -558,6 +637,29 @@ class Product(http.Controller):
         im = []
         for i in products:
             product_id = i['id']
+            att_domain = []
+            att_domain.append(['product_tmpl_id', '=', product_id])
+            attribute_line_ids = models.execute_kw(self.db, uid, self.password, 'product.template.attribute.line',
+                                                   'search_read', [att_domain], {
+                                                       'fields': ['id', 'attribute_id', 'value_ids']})
+
+            lines = []
+            for attribute_line_id in attribute_line_ids:
+                value_id_domain = []
+                value_id_domain.append(['id', 'in', attribute_line_id['value_ids']])
+
+                value_ids = models.execute_kw(self.db, uid, self.password, 'product.attribute.value',
+                                              'search_read', [value_id_domain], {
+                                                  'fields': ['id', 'name']})
+
+                lines.append({
+                    'attribute': {
+                        'id': attribute_line_id['attribute_id'][0],
+                        'name': attribute_line_id['attribute_id'][1],
+                    },
+                    'values': value_ids
+                })
+            i['attribute_line_ids'] = lines
             if i['product_template_image_ids']:
                 for item in i['product_template_image_ids']:
                     images = models.execute_kw(
