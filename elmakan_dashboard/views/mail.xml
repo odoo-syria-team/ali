@@ -79,6 +79,5 @@
         parent='setting_menu_window_elmakan'
         action="mail_action_window_elmakan"
         sequence="1" />
-    
 
 </odoo>

@@ -9,7 +9,9 @@
                 <field name="slug" />
                 <field name="title" />
                 <field name="text" />
-                <field name="state" />
+                <field name="image" widget="image" class="oe_avatar" />
+                <field name="image_url" invisible="1"/>
+                <!-- <field name="state" /> -->
             </tree>
         </field>
     </record>
@@ -40,9 +42,9 @@
                         <group>
                             <field name="write_date"/>
                         </group>
-                        <group>
+                        <!-- <group>
                             <field name="state" />
-                        </group> 
+                        </group>  -->
                     </group>
                     <notebook>
                         <page name="Content" string="Content">
@@ -93,7 +95,7 @@
         name='Features'
         parent='almakaan_root'
         action="feature_action_window_elmakan"
-        sequence="36" />
+        sequence="10" />
     
 
 </odoo>

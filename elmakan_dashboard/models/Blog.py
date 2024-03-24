@@ -14,6 +14,7 @@ class BlogElmakan(models.Model):
     slug = fields.Char(string='Slug',default='',compute='_compute_slug')
     tag = fields.Char(string='tag')
     state = fields.Boolean(string='On WebSite',default=False)
+    
     @api.depends('title')
     def _compute_slug(self):
         for record in self:

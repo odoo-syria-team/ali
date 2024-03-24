@@ -44,7 +44,9 @@
                         <group>
                             <field name="state" />
                         </group> 
-                        
+                        <group>
+                            <field name="title_in_section_boxes"/>
+                        </group>
                     </group>
                     <notebook>
                         <page name="Content" string="Content">

@@ -349,8 +349,8 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            brand_obj=request.env['brand.elmakan'].sudo().search([])
-            slider_obj=request.env['brand.slider.elmakan'].sudo().search([])
+            brand_obj=request.env['brand.elmakan'].sudo().search([('state','=',True)],order='isTopBrand desc')
+            slider_obj=request.env['brand.slider.elmakan'].sudo().search([('state','=',True)])
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             result=[
@@ -376,7 +376,14 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result ={
+                            "brandSlider": [
+                               
+                            ],
+                            "brands": [
+                                
+                            ]
+                        }   
             response = json.dumps({"brands":result,'message' : 'All Brands'}) 
             return Response(
                 response, status=200,
@@ -393,10 +400,13 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            brand_obj=request.env['brand.elmakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
+            brand_obj=request.env['brand.elmakan'].sudo().search([('state','=',True)])
+            # print('brand_obj',brand_obj)
+            filtered_brand_objs = brand_obj.filtered(lambda rec: rec.slug == slug)
+            # print('filtered_brand_objs',filtered_brand_objs)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
-            for item in brand_obj:
+            for item in filtered_brand_objs:
                 result.append({
                     'image': check_str(item.image_url),
                     'title': check_str(item.title),
@@ -405,14 +415,15 @@ class Partners(http.Controller):
                             {
                             'title': check_str(content.title),
                             'image': check_str(content.image_url),
-                            'text': check_str(content.text)
+                            'text': check_str(content.text),
+                            'logo':content.logo_url
                             }
                         for content in item.content_ids],
-                    'description': check_list([{
+                    'description': [{
                             'title': check_str(des.title),
                             'description': check_str(des.description),
                             'text': check_str(des.text)
-                        } for des in item.description_ids]),  
+                        } for des in item.description_ids],  
                     "gallery": [
                             {
                             "image": gallery.image_url,
@@ -420,6 +431,17 @@ class Partners(http.Controller):
                             }
                         for gallery in item.gallery_ids]      
                 })
+            if result:
+                result=result[0]
+            else:
+                result = {
+                        "image": "",
+                        "title": "",
+                        "isTopBrand": False,
+                        "content": [],
+                        "description": [],
+                        "gallery": []
+                    }
                 
             response = json.dumps({"brand":result,'message' : 'Brand Details'}) 
             return Response(
@@ -438,7 +460,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            category_obj=request.env['category.elmakan'].sudo().search([])
+            category_obj=request.env['category.elmakan'].sudo().search([('state','=',True)])
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in category_obj:
@@ -466,10 +488,11 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            category_obj=request.env['category.elmakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
+            category_obj=request.env['category.elmakan'].sudo().search([('state','=',True)])
+            filtered_category_obj = category_obj.filtered(lambda rec: rec.slug == slug)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
-            for item in category_obj:
+            for item in filtered_category_obj:
                 result.append({
                     'title': check_str(item.title),
                     'image': check_str(item.image_url),
@@ -486,11 +509,34 @@ class Partners(http.Controller):
                             "image": gallery.image_url,
                             "text": gallery.text
                             }
-                        for gallery in item.gallery_ids],   
-                    'boxes': [{ 'title': box.title, 'text': box.text } for box in item.boxes_ids]        
+                        for gallery in item.gallery_ids], 
+                      
+                    'boxes': {
+                        "title":check_str(item.title_in_section_boxes),
+                        "boxedData":[{ 'title': box.title, 'text': box.text } for box in item.boxes_ids] 
+                    }
+                           
                 })
+            if result:
+                result=result[0]
+            else:
+                result = {
+                            "title": "",
+                            "image": "",
+                            "text": "",
+                            "content": [
+                                
+                            ],
+                            "gallery": [
+                                
+                            ],
+                            'boxes': {
+                                "title":"",
+                                "boxedData":[] 
+                            }
+                        }
                 
-            response = json.dumps({"Categories":result,'message' : 'Category Details'}) 
+            response = json.dumps({"category":result,'message' : 'Category Details'}) 
             return Response(
                 response, status=200,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])    
@@ -513,7 +559,7 @@ class Partners(http.Controller):
             for item in about_obj:
                 result.append({
                     'text':check_str(item.text),
-                    'video':check_str(item.video),
+                    'video':check_str(item.video_url),
                     "hero": [
                         {
                             'image':check_str(hero.image_url),
@@ -531,7 +577,15 @@ class Partners(http.Controller):
                     "gallery": [
                             {
                             "image": gallery.image_url,
-                            "title": gallery.title
+                            "text": gallery.text,
+                            "popup": {
+                                'title': check_str(gallery.title_popup),
+                                'address': check_str(gallery.address_popup),
+                                'locationMapUrl': check_str(gallery.locationMapUrl_popup),
+
+                                'phone': check_str(gallery.phone_popup),
+                                'email': check_str(gallery.email_popup)
+                                }
                             }
                         for gallery in item.gallery_ids],   
                         
@@ -539,7 +593,19 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                    "text": "",
+                    "video": "",
+                    "hero": [
+                        
+                    ],
+                    "content": [
+                        
+                    ],
+                    "gallery": [
+                       
+                    ]
+                }    
             response = json.dumps({"aboutUs":result,'message' : 'AboutUs Details'}) 
             return Response(
                 response, status=200,
@@ -568,7 +634,7 @@ class Partners(http.Controller):
                     } for hero in item.hero_id]),
                     "about": check_list([{
                         "text": check_str(about.text),
-                        "video": check_str(about.video)
+                        "video": check_str(about.video_url)
                     } for about in item.about_id]),
                     "features": [
                         {
@@ -577,7 +643,7 @@ class Partners(http.Controller):
                         "image": check_str(feature.image_url),
                         "slug": check_str(feature.slug)
                         }
-                    for feature in item.features_ids],
+                    for feature in [y for y in item.label_content_ids]+[x for x in item.features_ids]],
                     "content": [
                         {
                         "title": check_str(content.title),
@@ -591,7 +657,22 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                    "hero": {
+                        "title": "",
+                        "image": ""
+                    },
+                    "about": {
+                        "text": "",
+                        "video" : ""
+                    },
+                    "features": [
+                        
+                    ],
+                    "content": [
+                        
+                    ]
+                }    
             response = json.dumps({"Home":result,'message' : 'Home Details'}) 
             return Response(
                 response, status=200,
@@ -611,7 +692,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            label_obj=request.env['labelcontent.elmakan'].sudo().search([('state','=',True)],limit=1)
+            label_obj=request.env['labelcontent.elmakan'].sudo().search([],limit=1)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in label_obj:
@@ -639,7 +720,13 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                        "title": "",
+                        "text": "",
+                        "content": [],
+                        "slider": [],
+                        "boxes": []
+                    }    
             response = json.dumps({"labelContent":result,'message' : 'Label Details'}) 
             return Response(
                 response, status=200,
@@ -651,26 +738,51 @@ class Partners(http.Controller):
                 response, status=500,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)])  
 
-    @http.route('/<string:slug>', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
+    @http.route('/feature/<string:slug>', auth="public",csrf=False,cors='*', website=True, methods=['GET'])
     def get_feature_by_slug(self,slug): 
         result=[]
+        data = []
+        label=False
         headers = request.httprequest.headers
         try:
-            feature_obj=request.env['feature.elmakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
-            print('feature_obj',feature_obj)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
-            for item in feature_obj:
+            check_label_slider=lambda x:x.slider_ids if label else []
+            check_label_box = lambda x:x.box_ids if label else []
+            feature_obj=request.env['feature.elmakan'].sudo().search([])
+            filtered_feature_obj = feature_obj.filtered(lambda rec: rec.slug == slug)
+            print('filtered_feature_obj >> ' , filtered_feature_obj)
+            label_obj=request.env['labelcontent.elmakan'].sudo().search([])
+            filtered_label_obj = label_obj.filtered(lambda rec: rec.slug == slug)
+            if filtered_feature_obj:
+                data=filtered_feature_obj
+                label=False
+            elif filtered_label_obj:
+                data=filtered_label_obj
+                label=True
+            else:
+                data=[]    
+            for item in data:
                 result.append({
                     'title':check_str(item.title),
                     'text':check_str(item.text),
+                    'link':check_str(item.link),
                     'content':[{
                         'text':check_str(content.text),
                         'title':check_str(content.title),
                         'link':check_str(content.link),
                         'image':check_str(content.image_url),
-                        
+                       
                     } for content in item.content_ids],
+                    "slider": [{
+                        'title':check_str(slider.title),
+                        'image':check_str(slider.image_url),
+                        'text':check_str(slider.text)
+                    } for slider in check_label_slider(item)],
+                    "boxes": [{
+                        'title':check_str(boxes.title),
+                        'text':check_str(boxes.text)
+                    } for boxes in check_label_box(item)]
                     
                     
                         
@@ -678,7 +790,14 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                        "title": "",
+                        "text": "",
+                        "link":"",
+                        "content": [],
+                        "slider": [],
+                        "boxes": []
+                    }   
             response = json.dumps({"data":result,'message' : f' {slug} Details'}) 
             return Response(
                 response, status=200,
@@ -715,7 +834,13 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                    "title": "",
+                    "text": "",
+                    "companies": [
+                        
+                    ]
+                }    
             response = json.dumps({"client":result,'message' : f' Client Details'}) 
             return Response(
                 response, status=200,
@@ -824,19 +949,16 @@ class Partners(http.Controller):
         recipients = []
         subject = 'Submit Form'
         body_email = f"""
-                        name : {kw.get('name','')}
-                        email : {kw.get('email','')}
-                        phone : {kw.get('phone','')}
-                        company name : {kw.get('company_name','')}
-                        message : {kw.get('message','')}
+                        Thanks for reaching out! We'll be in touch within 24 hours.
                     """
         
 
         
         try:
             if 'feature' in kw:
-                feature_id=request.env['feature.mail.elmakan'].sudo().search([('feature_id.slug','=',kw.get('feature'))])
-                print('feature_id',feature_id)
+                feature_obj=request.env['feature.mail.elmakan'].sudo().search([])
+                feature_id=feature_obj.filtered(lambda rec:rec.feature_id.slug == kw.get('feature'))
+                
                 if feature_id:
                     pass
                 else:
@@ -947,7 +1069,14 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                    "location": [
+                        
+                    ],
+                    "ourAgents": [
+                       
+                    ]
+                }    
             response = json.dumps({"contact":result,'message' : f' Contact US Details'}) 
             return Response(
                 response, status=200,
@@ -965,7 +1094,7 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            blog_obj=request.env['blog.almakan'].sudo().search([])
+            blog_obj=request.env['blog.almakan'].sudo().search([('state','=',True)])
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
             for item in blog_obj:
@@ -993,10 +1122,11 @@ class Partners(http.Controller):
         result=[]
         headers = request.httprequest.headers
         try:
-            blog_obj=request.env['blog.almakan'].sudo().search([('title','ilike',slug.replace('-',' '))])
+            blog_obj=request.env['blog.almakan'].sudo().search([('state','=',True)])
+            filtered_blog_obj = blog_obj.filtered(lambda rec: rec.slug == slug)
             check_list=lambda x:x[0] if x else {} 
             check_str=lambda x:x if x else ""
-            for item in blog_obj:
+            for item in filtered_blog_obj:
                 result.append({
                     'image': check_str(item.image_url),
                     'title': check_str(item.title),
@@ -1005,7 +1135,11 @@ class Partners(http.Controller):
             if result:
                 result=result[0]
             else:
-                result={}    
+                result={
+                            "image": "",
+                            "title": "",
+                            "content": ""
+                        }   
             response = json.dumps({"blogDetails":result,'message' : 'Blog Details'}) 
             return Response(
                 response, status=200,

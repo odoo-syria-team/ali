@@ -10,3 +10,7 @@ from . import client
 from . import contact_us
 from . import mail
 from . import Blog
+from . import content
+from . import gallery
+from . import box
+from . import description

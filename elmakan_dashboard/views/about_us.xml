@@ -24,9 +24,11 @@
                         <group>
                             <field name="text" />
                         </group>
+
                         <group>
-                            <field name="video" />
+                            <field name="video_url"/>
                         </group>
+                        
                         <group>
                             <field name="create_date"/>
                         </group>
@@ -52,9 +54,18 @@
                         <page name="gallery" string="Gallery">
                             <field name="gallery_ids">
                                 <tree editable="bottom">
-                                    <field name='title' />
+                                    <field name='text'/>
+                                    <!-- <field name='title' /> -->
                                     <field name="image" widget="image" class="oe_avatar" />
                                     <field name="image_url" invisible="1"/>
+                                    <!-- //// -->
+                                    <field name="title_popup"/>
+                                    <field name="address_popup"/>
+                                    
+                                    <field name="locationMapUrl_popup"/>
+                                    <field name="phone_popup"/>
+                                    <field name="email_popup"/>
+
                                 </tree>
                             </field>
 
@@ -92,7 +103,7 @@
         name='About US'
         parent='almakaan_root'
         action="about_action_window_elmakan"
-        sequence="32" />
+        sequence="2" />
     
 
 </odoo>

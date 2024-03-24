@@ -25,6 +25,7 @@
 
                         <group>
                             <field name="title" />
+                            <field name="categ_id" widget='many2many_tags' />
                         </group>   
                         <group> 
                             <field name="slug"/>
@@ -54,6 +55,8 @@
                                     <field name="title" />
                                     <field name="image" widget="image" class="oe_avatar" />
                                     <field name="image_url" invisible="1"/>
+                                    <field name="logo" widget="image" class="oe_avatar" />
+                                    <field name="logo_url" invisible="1"/>
                                 </tree>
                             </field>
 
@@ -100,6 +103,6 @@
         name='Brand'
         parent='almakaan_root'
         action="brand_action_window_elmakan"
-        sequence="12" />
+        sequence="7" />
 
 </odoo>

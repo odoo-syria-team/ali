@@ -97,7 +97,7 @@
         name='Contact US '
         parent='almakaan_root'
         action="contact_us_elmakan_action_window_elmakan"
-        sequence="38" />
+        sequence="12" />
     
 
 </odoo>

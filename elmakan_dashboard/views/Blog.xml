@@ -73,7 +73,7 @@
         </record>
 
         
-        <menuitem id="blog_almakan" name="Blog" sequence="39" parent="almakaan_root"
+        <menuitem id="blog_almakan" name="Blog" sequence="13" parent="almakaan_root"
             action="blog_almakan_action_window" />
         
         

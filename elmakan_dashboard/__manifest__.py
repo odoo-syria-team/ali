@@ -1,6 +1,6 @@
 
 {
-    "name": "Elmakan",
+    "name": "almakaan plus",
     "summary": """ """,
     "version": "16.0.1.0.0",
     "author": "Ali Ammar",
@@ -15,13 +15,18 @@
              'views/about_us.xml',
              'views/brand_slider.xml',
              'views/home.xml',
+             'views/content.xml',
              'views/label_content.xml',
              'views/feature.xml',
+             'views/gallery.xml',
+             'views/box.xml',
+             'views/description.xml',
              'views/client.xml',
              'views/contact_us.xml',
              'views/Blog.xml',
              'views/mail.xml',
              'data/mail.xml',
+
              
              ],
 

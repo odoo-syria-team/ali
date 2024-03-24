@@ -8,7 +8,7 @@
             <tree>
                 <field name="about_id" />
                 <field name="hero_id" />
-                <field name="state" />
+                <field name="state"/>
             </tree>
         </field>
     </record>
@@ -60,6 +60,20 @@
                             </field>
 
                         </page>
+                        <page name="label" string="Labels">
+                            <field name="label_content_ids">
+                                <tree editable="bottom">
+                                    <field name='title' />
+                                    <field name='slug' />
+                                    <field name="text" />
+                                    <field name ="link"/>
+                                    <field name="image" widget="image" class="oe_avatar" />
+                                    <field name="image_url" invisible="1"/>
+                                </tree>
+                            </field>
+
+                        </page>
+                        
                         
                         
                     </notebook>
@@ -83,7 +97,7 @@
         name='Home'
         parent='almakaan_root'
         action="Home_elmakan_action_window_elmakan"
-        sequence="34" />
+        sequence="1" />
     
 
 </odoo>

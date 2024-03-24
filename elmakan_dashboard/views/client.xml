@@ -70,7 +70,7 @@
         name='Client'
         parent='almakaan_root'
         action="client_action_window_elmakan"
-        sequence="37" />
+        sequence="12" />
     
 
 </odoo>
