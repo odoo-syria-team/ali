@@ -91,7 +91,7 @@ class Product(http.Controller):
             product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain], {
                 'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price',
                            'description_sale', 'x_studio_specifications', 'x_studio_why_and_when', 'x_studio_sku',
-                           'x_studio_breif', 'x_studio_features', 'x_studio_pdf', 'x_studio_video',
+                           'x_studio_breif', 'x_studio_features', 'x_studio_video',
                            'x_studio_product_feature_mobile', 'tax_string'], 'limit': limit,
                 'offset': (page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count',
@@ -350,7 +350,6 @@ class Product(http.Controller):
                                                         'categ_id', 'list_price', 'description_sale',
                                                         'x_studio_specifications', 'x_studio_why_and_when',
                                                         'x_studio_sku', 'x_studio_breif', 'x_studio_features',
-                                                        'x_studio_pdf',
                                                         'x_studio_video', 'x_studio_product_feature_mobile',
                                                         'tax_string']})
             user_id = int(valid_token[0]['x_studio_user_name'][0])
@@ -473,7 +472,6 @@ class Product(http.Controller):
                                                             'categ_id', 'list_price', 'description_sale',
                                                             'x_studio_specifications', 'x_studio_why_and_when',
                                                             'x_studio_sku', 'x_studio_breif', 'x_studio_features',
-                                                            'x_studio_pdf',
                                                             'x_studio_video', 'x_studio_product_feature_mobile',
                                                             'tax_string']})
                 user_id = int(valid_token[0]['x_studio_user_name'][0])
@@ -499,7 +497,6 @@ class Product(http.Controller):
                                                             'categ_id', 'list_price', 'description_sale',
                                                             'x_studio_specifications', 'x_studio_why_and_when',
                                                             'x_studio_sku', 'x_studio_breif', 'x_studio_features',
-                                                            'x_studio_pdf',
                                                             'x_studio_video', 'x_studio_product_feature_mobile',
                                                             'tax_string']})
             x = 0
@@ -598,7 +595,6 @@ class Product(http.Controller):
                 {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price',
                             'description_sale', 'x_studio_specifications', 'x_studio_why_and_when',
                             'x_studio_sku', 'x_studio_breif', 'x_studio_features',
-                            'x_studio_pdf',
                             'x_studio_video',
                             'product_template_image_ids', 'x_studio_product_feature_mobile', 'tax_string'],
                  'offset': (page - 1) * 5, 'limit': 5}
@@ -628,7 +624,7 @@ class Product(http.Controller):
                 {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'description_sale',
                             'x_studio_specifications', 'x_studio_why_and_when',
                             'x_studio_sku', 'x_studio_breif', 'x_studio_features',
-                            'x_studio_pdf', 'x_studio_video', 'product_template_image_ids',
+                            'x_studio_video', 'product_template_image_ids',
                             'x_studio_product_feature_mobile', 'tax_string'], 'offset': (page - 1) * 5,
                  'limit': 5}
             )
