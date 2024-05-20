@@ -279,8 +279,8 @@ class Product(http.Controller):
             categ_name = i['categ_id'][1]
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
-            if products[x]['tax_string']:
-                products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
+            # if products[x]['tax_string']:
+            #     products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
             products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             
             x += 1
@@ -361,8 +361,8 @@ class Product(http.Controller):
                 categ_name = i['categ_id'][1]
                 products[x]['categ_name'] = categ_name
                 products[x]['categ_id'] = categ_id
-                if products[x]['tax_string']:
-                    products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
+                # if products[x]['tax_string']:
+                #     products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
             # products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 products[x]['list_price'] = products[x]['list_price'] if valid_token else None
                 x += 1
@@ -434,12 +434,13 @@ class Product(http.Controller):
             product_price_list = models.execute_kw(
                 self.db, uid, self.password, 'product.pricelist.item', 'search_read',
                 [[['pricelist_id', '=', user_product_pricelist_id]]],
-                {'fields': ['product_id', 'fixed_price']}
+                {'fields': ['product_tmpl_id', 'fixed_price']}
             )
 
             for product in products:
                 for prod in product_price_list:
-                    if product['product_id'][0] == prod['product_id'][0]:
+                    print('prod >>> ' , prod)
+                    if product['id'] == prod['product_tmpl_id'][0]:
                         product['list_price'] = prod['fixed_price']
         else:
             products = models.execute_kw(
@@ -479,8 +480,7 @@ class Product(http.Controller):
             products[x]['categ_id'] = categ_id
             products[x]['images_catalog']  = im
             
-            if products[x]['tax_string']:
-                products[x]['list_price'] = self.extract_float_value(products[x]['tax_string'])
+            
             products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             im = []
             x += 1
