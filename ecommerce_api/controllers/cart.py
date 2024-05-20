@@ -59,8 +59,8 @@ class Cart(http.Controller):
         product_data = models.execute_kw(
             self.db, uid, self.password, 'product.product', 'search_read',
             [[['product_tmpl_id', '=', product_id]]],
-            {'fields': ['list_price', 'description_sale','tax_string'], 'limit': 1}
-        )        
+            {'fields': ['list_price', 'description_sale','tax_string' , 'name'], 'limit': 1}
+        )    
         if not product_data :
             response=json.dumps({"data":[] , 'message' : 'Product ID is not correct'})
             return Response(
@@ -89,22 +89,22 @@ class Cart(http.Controller):
                     {'fields': ['product_id', 'fixed_price']}
                 )
 
-                for product in product_data:
-                    for prod in product_price_list:
-                        if product['product_id'][0] == prod['product_id'][0]:
-                            product['list_price'] = prod['fixed_price']
-                        else :
-                            if products['tax_string']:
-                                product['list_price'] = self.extract_float_value(products['tax_string'])
+                # for product in product_data:
+                #     for prod in product_price_list:
+                #         if product['product_id'][0] == prod['product_id'][0]:
+                #             product['list_price'] = prod['fixed_price']
+                #         else :
+                # if product_data[0]['tax_string']:
+                #     product_data[0]['list_price'] = self.extract_float_value(product_data[0]['tax_string'])
                             
                              
-                
+                print('product_data >>>> ' , product_data)
                 cart_count= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read',[['&',['product_id', '=', product_data[0]['id']],['order_id', '=', int(user_quot[0]['id']) ]]],{'fields' :['product_uom_qty']} )
                 if cart_count:
                     qty = cart_count[0]['product_uom_qty'] + 1
                     models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[int(cart_count[0]['id'])], {'product_uom_qty': qty}])
                 else:
-                    cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':product_data[0]['description_sale'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
+                    cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':product_data[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
 
                 response=json.dumps({"data":[] , 'message' : 'Product had been added to your cart'})
                 return Response(
@@ -502,7 +502,7 @@ class Cart(http.Controller):
             sale_order = request.env['sale.order'].sudo().search([
                 ('partner_id', '=', user_partner[0]),
                 ('state', 'in', ['draft', 'sent']),
-                ('website_id', '=', 1)  # Filter by cart states (e.g., draft, sent)
+                ('website_id', '=', 2)  # Filter by cart states (e.g., draft, sent)
             ], limit=1)
 
             if sale_order:

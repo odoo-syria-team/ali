@@ -68,7 +68,7 @@ class WishList(http.Controller):
                 
                 for i in user_wishlist:
                     product_id = int(i['product_id'][0])
-                    products =models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read',
+                    products =models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read',
                                             [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
                      
 
@@ -175,12 +175,17 @@ class WishList(http.Controller):
             
             # Check if the product with the given ID exists
             product_exists = models.execute_kw(self.db, uid, self.password, 'product.product', 'search_count',
-                                                [[['id', '=', product_id]]])
+                                                [[['product_tmpl_id', '=', int(product_id)]]])
+            product_data = models.execute_kw(
+            self.db, uid, self.password, 'product.product', 'search_read',
+            [[['product_tmpl_id', '=', product_id]]],
+            {'fields': ['list_price', 'description_sale','tax_string' , 'name'], 'limit': 1}
+        )    
             if product_exists:
                 # Create a new record in the product.wishlist model
                 wishlist_data = {
                     'partner_id': user_partner,
-                    'product_id': product_id,
+                    'product_id': product_data[0]['id'],
                     'website_id' : 1
                 }
                 wishlist_id = models.execute_kw(self.db, uid, self.password, 'product.wishlist', 'create', [wishlist_data])

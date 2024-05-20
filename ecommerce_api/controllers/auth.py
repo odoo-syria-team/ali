@@ -285,16 +285,32 @@ class Auth(http.Controller):
                 fields['phone']=body['phone']
 
         id = int(valid_token[0]['x_studio_user_name'][0])
-        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['login','name',"phone"]})
+        user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['login','name',"phone","partner_id"]})
 
-    
+        user_partner = user_data[0]['partner_id'][0]
             
             
         c=models.execute_kw(self.db, uid, self.password, 'res.users', 'write', [[id], fields])
-        
-        
+        if 'password' in body:
+            if body['password'] == body['confirm_password']:
+                c=models.execute_kw(self.db, uid, self.password, 'res.users', 'write', [[id], {'password' : body['password']}])
+        if 'email' in body :                
+                fields['email']=body['email']
+        if 'salutation' in body :                
+                fields['x_studio_salutation']=body['salutation']
+        if 'company' in body :                
+                fields['company_name']=body['company']
+        if 'country_id' in body :                
+                fields['country_id']=body['country_id']
+        if 'address' in body :                
+                fields['street']=body['address']
+        if 'post_code' in body :                
+                fields['x_studio_post_code']=body['post_code']
+        if 'find_us' in body :                
+                fields['x_studio_find_us']=body['find_us']        
 
-
+        print('int(user_partner) >> ' , int(user_partner))
+        c=models.execute_kw(self.db, uid, self.password, 'res.partner', 'write', [[int(user_partner)], fields])
         user_data = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' ,id]]], {'fields': ['name',"login" , "phone"]})
         user_details = [{"id":user_data[0]['id'],"username" :user_data[0]['name'],"phone" :user_data[0]['phone'] ,"email":user_data[0]['login'] ,"timestamp":date_now}]
         response = json.dumps({'data': user_details,'message':'تم تغيير معلوماتك'})
