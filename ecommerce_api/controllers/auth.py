@@ -92,6 +92,7 @@ class Auth(http.Controller):
         password = body['password']
         confirm_password = body['confirm_password']
         email = body['email']
+        email = email.lower()
         phone = body['phone']
         
         username_validation = self._validation(username)
@@ -157,6 +158,7 @@ class Auth(http.Controller):
             body =json.loads(request.httprequest.data)
             uid = False
             login = body['email']
+            login = login.lower()
             message = ''
             password = body['password']
                 

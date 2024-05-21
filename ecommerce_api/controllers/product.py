@@ -551,6 +551,7 @@ class Product(http.Controller):
         if valid_token:
             shipping_id = models.execute_kw(self.db, uid, self.password, 'delivery.carrier', 'search_read', [[['id' , '=' , shipping_id]]],{'fields':['id','name','delivery_type','fixed_price', 'free_over','amount','product_id']})
             user_id =int(valid_token[0]['x_studio_user_name'][0])
+            print('shipping_id >>>> ' , shipping_id)
             user_partner = models.execute_kw(self.db, uid, self.password, 'res.users', 'search_read', [[['id' , '=' , user_id]]],{'fields':['partner_id','property_product_pricelist']})
             user_product_pricelist_id =user_partner[0]['property_product_pricelist'][0] 
             user_partner = user_partner[0]['partner_id'][0]
@@ -560,9 +561,9 @@ class Product(http.Controller):
                 
                 
                 try:
-                    product_ship_id =  models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '=' , shipping_id[0]['product_id'][0]]]],{'fields':['list_price']})
+                    product_ship_id =  models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['id' , '=' , shipping_id[0]['product_id'][0]]]],{'fields':['list_price']})
                     print('product_ship_id' , product_ship_id)
-                    product_ship_temp_id =  models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [[['id' , '=' , int(product_ship_id[0]['id'])]]],{'fields':['list_price']})
+                    product_ship_temp_id =  models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read', [[['id' , '=' , int(product_ship_id[0]['id'])]]],{'fields':['list_price']})
                     print('product_ship_id' , product_ship_id)
                     cart_line_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id' :shipping_id[0]['product_id'][0],'order_id': user_quot[0]['id'] ,'name':shipping_id[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit' :product_ship_temp_id[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
                 except Exception as e: 
