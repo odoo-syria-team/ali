@@ -220,6 +220,167 @@ class Banners(http.Controller):
                 response, status=403,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
+
+    @http.route('/cart/billing_address/<int:address_id>', auth="public", csrf=False, website=True, methods=['PUT'])
+    def update_billing_address(self, address_id, **kw):
+        response = ''
+        body = json.loads(request.httprequest.data)
+        name = body.get('name', False)
+        email = body.get('email', False)
+        street1 = body.get('street1', False)
+        phone = body.get('phone', False)
+        street2 = body.get('street2', False)
+        city = body.get('city', False)
+        state_id = body.get('state_id', False)
+        zip = body.get('zip', False)
+        country_id = body.get('country_id', False)
+
+        if not phone:
+            response = json.dumps({'data': [], 'message': 'Missing required fields'})
+            return Response(
+                response, status=400,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url), allow_none=True)
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url), allow_none=True)
+        uid = common.authenticate(self.db, self.username, self.password, {})
+
+        try:
+            token = request.httprequest.headers.get('Authorization', '').replace('Bearer ', '')
+            valid_token = models.execute_kw(
+                self.db, uid, self.password, 'x_user_token', 'search_read',
+                [[['x_studio_user_token', '=', token]]],
+                {'fields': ['x_studio_user_name']}
+            )
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': 'Unauthorized!'})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        if valid_token:
+            try:
+                user_id = int(valid_token[0]['x_studio_user_name'][0])
+                user_partner = models.execute_kw(
+                    self.db, uid, self.password, 'res.users', 'search_read',
+                    [[['id', '=', user_id]]],
+                    {'fields': ['partner_id']}
+                )
+                user_partner = user_partner[0]['partner_id'][0]
+
+                billing_address_data = {
+                    'name': name,
+                    'street': street1,
+                    'street2': street2,
+                    'city': city,
+                    'zip': zip,
+                    'country_id': country_id,
+                    'state_id': state_id,
+                    'phone': phone,
+                    'email': email
+                }
+
+                # Update the billing address
+                models.execute_kw(self.db, uid, self.password, 'res.partner', 'write', [[address_id], billing_address_data])
+                user_quot = models.execute_kw(
+                    self.db, uid, self.password, 'sale.order', 'search_read',
+                    [['&', ['state', '=', 'draft'], ['partner_id', '=', user_partner]]],
+                    {'fields': ['id', 'amount_total', 'amount_tax', 'amount_paid']}
+                )
+
+                response = json.dumps({'data': {'partner_id': user_partner}, 'message': 'Address updated successfully'})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+            except Exception as e:
+                response = json.dumps({'data': [], 'message': str(e)})
+                return Response(
+                    response, status=500,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+        else:
+            response = json.dumps({'data': [], 'message': 'Invalid Token'})
+            return Response(
+                response, status=403,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+    @http.route('/cart/set_addresses', auth="public", csrf=False, website=True, methods=['PUT'])
+    def set_addresses(self, **kw):
+        response = ''
+        body = json.loads(request.httprequest.data)
+        billing_id = body.get('billing_id', False)
+        shipping_id = body.get('shipping_id', False)
+
+        if not (billing_id and shipping_id):
+            response = json.dumps({'data': [], 'message': 'Missing required fields'})
+            return Response(
+                response, status=400,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url), allow_none=True)
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url), allow_none=True)
+        uid = common.authenticate(self.db, self.username, self.password, {})
+
+        try:
+            token = request.httprequest.headers.get('Authorization', '').replace('Bearer ', '')
+            valid_token = models.execute_kw(
+                self.db, uid, self.password, 'x_user_token', 'search_read',
+                [[['x_studio_user_token', '=', token]]],
+                {'fields': ['x_studio_user_name']}
+            )
+        except Exception as e:
+            response = json.dumps({'data': 'no data', 'message': 'Unauthorized!'})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+        if valid_token:
+            try:
+                user_id = int(valid_token[0]['x_studio_user_name'][0])
+                user_partner = models.execute_kw(
+                    self.db, uid, self.password, 'res.users', 'search_read',
+                    [[['id', '=', user_id]]],
+                    {'fields': ['partner_id']}
+                )
+                user_partner = user_partner[0]['partner_id'][0]
+
+                user_quot = models.execute_kw(
+                    self.db, uid, self.password, 'sale.order', 'search_read',
+                    [['&', ['state', '=', 'draft'], ['partner_id', '=', user_partner]]],
+                    {'fields': ['id', 'amount_total', 'amount_tax', 'amount_paid']}
+                )
+                if user_quot:
+                    models.execute_kw(
+                        self.db, uid, self.password, 'sale.order', 'write',
+                        [[user_quot[0]['id']], {'partner_id': user_partner, 'partner_invoice_id': billing_id, 'partner_shipping_id': shipping_id}]
+                    )
+
+                response = json.dumps({'data': {'partner_id': user_partner}, 'message': 'Addresses updated successfully'})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+            except Exception as e:
+                response = json.dumps({'data': [], 'message': str(e)})
+                return Response(
+                    response, status=500,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
+        else:
+            response = json.dumps({'data': [], 'message': 'Invalid Token'})
+            return Response(
+                response, status=403,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
+
+
+
     @http.route('/cart/add_address', auth="public", csrf=False, website=True, methods=['POST'])
     def add_address(self, **kw):
         response = ''
@@ -345,10 +506,12 @@ class Banners(http.Controller):
             )
             print('user_records >> ' , user_records)
             partner_id=user_records[0]['partner_id'][0]
-            partner_records = models.execute_kw(self.db, uid, self.password, 'res.partner', 'search_read', [[['parent_id', '=', partner_id]]],{
+            partner_records = models.execute_kw(self.db, uid, self.password, 'res.partner', 'search_read', [['|' , ['parent_id', '=', partner_id] , ['id' , '=' , partner_id]]],{
                                             'fields': ['id','name' ,'email','phone','country_id','zip' ,'street', 'street2','city']})
-            
-            
+            for partner in partner_records:
+                is_valid = all(partner.get(field) for field in partner)  # Check if all fields have a truthy value
+                partner['is_valid'] = is_valid and True or False
+            print('user_records >> ' , partner_records)
             
             try:
                 response = json.dumps({"data":{"shipping_adresses":partner_records}})
@@ -368,6 +531,8 @@ class Banners(http.Controller):
                 response, status=403,
                 headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
             )
+
+    
 
     @http.route('/cart/billing_addresse',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_billing_addresse(self,parent_id= None, **kw): 
