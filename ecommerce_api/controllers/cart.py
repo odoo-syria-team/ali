@@ -155,13 +155,11 @@ class Cart(http.Controller):
             if user_quot:
                 
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
-                print('user_carts >>> ' , user_carts)
                 for i in user_carts:
                     product_id = i['product_id'][0]
                     i['cart_id'] = i['id']
                     products =models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read',
-                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
-                    print('products >>> ' , products)
+                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'product_tmpl_id']})
                     i['id']=product_id
                     i['name'] = i['product_id'][1]     
                     i['list_price'] = i['price_unit'] 
@@ -220,6 +218,7 @@ class Cart(http.Controller):
             if user_quot:
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
                 id = int(user_quot[0]['id'])
+                
                 models.execute_kw(self.db, uid, self.password, 'sale.order', 'write', [[id], {'state': 'sale'}]) 
                 for i in user_carts:
                     product_id = i['product_id'][0]
@@ -270,7 +269,9 @@ class Cart(http.Controller):
 
             user_partner = user_partner[0]['partner_id'][0]
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
+            
             if user_quot:
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
                 result = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'unlink', [[id]])
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:

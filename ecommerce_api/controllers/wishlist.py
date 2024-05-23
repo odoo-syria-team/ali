@@ -69,7 +69,7 @@ class WishList(http.Controller):
                 for i in user_wishlist:
                     product_id = int(i['product_id'][0])
                     products =models.execute_kw(self.db, uid, self.password, 'product.product', 'search_read',
-                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string']})
+                                            [[['id', '=', product_id]]], {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string','product_tmpl_id']})
                      
 
                     user_id = int(valid_token[0]['x_studio_user_name'][0])
