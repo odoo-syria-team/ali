@@ -94,6 +94,8 @@ class WishList(http.Controller):
                     im = []
                     for i in products:
                         product_id = i['id']
+                        i['product_tmpl_id'] = products[0]['product_tmpl_id'][0]
+                        
                         if i['product_template_image_ids']:
                             for item in i['product_template_image_ids']:
                                 images = models.execute_kw(

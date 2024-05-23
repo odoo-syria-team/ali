@@ -163,6 +163,7 @@ class Cart(http.Controller):
                     i['id']=product_id
                     i['name'] = i['product_id'][1]     
                     i['list_price'] = i['price_unit'] 
+                    i['product_tmpl_id'] = products[0]['product_tmpl_id'][0]
                     if  products[0]['categ_id']:
                         categ_name = products[0]['categ_id'][1]
                     else:
