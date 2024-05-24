@@ -332,7 +332,7 @@ class Cart(http.Controller):
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:
                     if i['product_id'][0] == id :
-                    models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[int(i['id'])], {'product_uom_qty': count}])  
+                        models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[int(i['id'])], {'product_uom_qty': count}])  
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:
                     product_id = i['product_id'][0]
