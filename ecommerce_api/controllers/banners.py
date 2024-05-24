@@ -568,6 +568,9 @@ class Banners(http.Controller):
                 [[['id', '=', partner_id]]],
                 {'fields': ['id', 'name', 'email', 'phone', 'country_id', 'zip', 'street', 'street2', 'city']}
             )
+            for partner in partner_records:
+                is_valid = all(partner.get(field) for field in partner)  # Check if all fields have a truthy value
+                partner['is_valid'] = is_valid and True or False
             try:
                 response = json.dumps({"data":{"billing_adresses":partner_records}})
                 return Response(
