@@ -29,7 +29,10 @@ class Cart(http.Controller):
     db = 'gtec-security1'
     username ='marketing@gtecsecurity.co.uk'
     password = 'GTECWeb$ite'
-
+    # url = 'http://localhost:8090'
+    # db = 'saude'
+    # username ='admin'
+    # password = 'admin'
 
     def extract_float_value(self,string):
         pattern = r"[-+]?\d*\.\d+|\d+"  # Regular expression pattern to match float or integer values
@@ -43,6 +46,7 @@ class Cart(http.Controller):
     def add_item_to_cart(self,product_id, **kw):
         response = ''            
         authe = request.httprequest.headers
+        body =json.loads(request.httprequest.data)
         product_id=int(product_id)
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
@@ -56,12 +60,34 @@ class Cart(http.Controller):
             response, status=401,
             headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
         )
+        variants = []
+        for i in body['variant']:
+            variants.append([i['key'] , i['value']])
+
+        var_val = []
+        for variant in variants:
+            
+            product_var = models.execute_kw(
+                self.db, uid, self.password, 'product.template.attribute.value', 'search_read',
+                [['&',['product_tmpl_id', '=', product_id],['attribute_id', '=', variant[0]],['product_attribute_value_id', '=', variant[1]]]],
+                {'fields': ['id', 'name','attribute_line_id']}
+            )  
+            var_val.append(int(product_var[0]['id']))
+
+        
         product_data = models.execute_kw(
             self.db, uid, self.password, 'product.product', 'search_read',
-            [[['product_tmpl_id', '=', product_id]]],
-            {'fields': ['list_price', 'description_sale','tax_string' , 'name'], 'limit': 1}
-        )    
-        if not product_data :
+            [[['product_tmpl_id', '=', product_id] ]],
+            {'fields': ['list_price', 'description_sale','tax_string' , 'name' , 'product_template_variant_value_ids']}
+        )   
+        new_product_data= []
+        for i in product_data:
+            if var_val == i['product_template_variant_value_ids']:
+                new_product_data.append(i)
+            else:
+                del i
+
+        if not new_product_data :
             response=json.dumps({"data":[] , 'message' : 'Product ID is not correct'})
             return Response(
             response, status=400,
@@ -89,22 +115,22 @@ class Cart(http.Controller):
                     {'fields': ['product_id', 'fixed_price']}
                 )
 
-                # for product in product_data:
+                # for product in new_product_data:
                 #     for prod in product_price_list:
                 #         if product['product_id'][0] == prod['product_id'][0]:
                 #             product['list_price'] = prod['fixed_price']
                 #         else :
-                # if product_data[0]['tax_string']:
-                #     product_data[0]['list_price'] = self.extract_float_value(product_data[0]['tax_string'])
+                # if new_product_data[0]['tax_string']:
+                #     new_product_data[0]['list_price'] = self.extract_float_value(new_product_data[0]['tax_string'])
                             
                              
-                print('product_data >>>> ' , product_data)
-                cart_count= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read',[['&',['product_id', '=', product_data[0]['id']],['order_id', '=', int(user_quot[0]['id']) ]]],{'fields' :['product_uom_qty']} )
+                print('new_product_data >>>> ' , new_product_data)
+                cart_count= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read',[['&',['product_id', '=', new_product_data[0]['id']],['order_id', '=', int(user_quot[0]['id']) ]]],{'fields' :['product_uom_qty']} )
                 if cart_count:
                     qty = cart_count[0]['product_uom_qty'] + 1
                     models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'write', [[int(cart_count[0]['id'])], {'product_uom_qty': qty}])
                 else:
-                    cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':product_data[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
+                    cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id':int(new_product_data[0]['id']),'order_id': int(user_quot[0]['id']) ,'name':new_product_data[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit':new_product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
 
                 response=json.dumps({"data":[] , 'message' : 'Product had been added to your cart'})
                 return Response(
@@ -113,7 +139,7 @@ class Cart(http.Controller):
             )
             else:
                 cart_id= models.execute_kw(self.db, uid, self.password, 'sale.order', 'create', [{'partner_id' :user_partner }])
-                cart_line_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id' :int(product_data[0]['id']),'order_id': cart_id ,'name':product_data[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit':product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
+                cart_line_id= models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'create', [{'product_id' :int(new_product_data[0]['id']),'order_id': cart_id ,'name':new_product_data[0]['name'],'customer_lead': 2.0,'salesman_id': '1','price_unit':new_product_data[0]['list_price'],'product_uom_qty' : 1.0,'product_uom':'1'}])
                 response=json.dumps({"data":[] , 'message' : 'Product had been added to your cart'})
                 return Response(
                 response, status=200,

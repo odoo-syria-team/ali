@@ -85,7 +85,6 @@ class Product(http.Controller):
                 domain = ['|',]
                 for term in term_list:
                     domain.append(['name', 'ilike', term])
-                    # domain.append(['description_sale', 'ilike', term])
                 
             product_ids = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_read', [domain],{'fields':['id','name','type','uom_name', 'cost_currency_id','categ_id','list_price','description_sale' ,'x_studio_specifications' ,'x_studio_why_and_when' ,'x_studio_product_feature_mobile','tax_string'] , 'limit':limit, 'offset':(page - 1) * limit})
             product_obj_count = models.execute_kw(self.db, uid, self.password, 'product.template', 'search_count', [domain])
@@ -420,7 +419,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications'],
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications','attribute_line_ids'],
                 'offset': (page - 1) * 5, 'limit': 5}
             )
             user_id = int(valid_token[0]['x_studio_user_name'][0])
@@ -446,15 +445,52 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.template', 'search_read',
                 [[['id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications'], 'offset': (page - 1) * 5,
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','alternative_product_ids','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'attribute_line_ids'], 'offset': (page - 1) * 5,
                 'limit': 5}
             )
 
         x = 0
         im = []
-        print('productsproducts >>>> ' , products)
         for i in products:
             product_id = i['id']
+            values= []
+            varient = []
+            alternative = []
+            for alternative_ids in i['alternative_product_ids']:
+                alternative_product = models.execute_kw(
+                self.db, uid, self.password, 'product.template', 'search_read',
+                [[['id', '=', int(alternative_ids)]]],
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'attribute_line_ids'], 'offset': (page - 1) * 5,
+                'limit': 5}
+            )
+                if alternative_product:
+                    alternative.append(alternative_product[0])
+            for variant in i['attribute_line_ids']:
+                values= []
+                print('variant >>>> ' , variant)
+                xs = models.execute_kw(
+                self.db, uid, self.password, 'product.template.attribute.line', 'search_read',
+                [[['id', '=', variant]]],
+                {'fields': ['id', 'attribute_id', 'value_ids']})
+                for s in xs:
+                    print('asd asdasd as' , s)
+                    for value in s['value_ids']:
+                        value_v = models.execute_kw(
+                        self.db, uid, self.password, 'product.attribute.value', 'search_read',
+                        [[['id', '=', value]]],
+                        {'fields': ['id', 'name']})
+                        print('value_v >>> ' , value_v)
+                        values.append({
+                            'id' : value_v[0]['id'],
+                            'name' : value_v[0]['name']
+                        })
+                    varient.append({
+                            'id' : s['attribute_id'][0],
+                            'key' : s['attribute_id'][1],
+                            'values' : values
+                        })
+
+                print('asd >>>>> ' ,varient)
             if i['product_template_image_ids']:
                 for item in i['product_template_image_ids']:
                     images = models.execute_kw(
@@ -480,8 +516,8 @@ class Product(http.Controller):
             products[x]['categ_name'] = categ_name
             products[x]['categ_id'] = categ_id
             products[x]['images_catalog']  = im
-            
-            
+            products[x]['varient']  =varient
+            products[x]['alternative']  =alternative
             products[x]['list_price'] = products[x]['list_price'] if valid_token else None
             im = []
             x += 1
