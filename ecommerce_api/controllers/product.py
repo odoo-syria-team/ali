@@ -462,11 +462,17 @@ class Product(http.Controller):
                 alternative_product = models.execute_kw(
                 self.db, uid, self.password, 'product.product', 'search_read',
                 [[['id', '=', int(alternative_ids)]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'attribute_line_ids'], 'offset': (page - 1) * 5,
+                {'fields': ['id','product_tmpl_id' , 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'attribute_line_ids'], 'offset': (page - 1) * 5,
                 'limit': 5}
             )
-                print('alternative_product >>>>>> ' , alternative_product)
                 if alternative_product:
+                    for j in alternative_product:
+                        id = 0
+                        id = j['product_tmpl_id'][0]
+                        j['id'] = id
+                        del j['product_tmpl_id']
+                        image_url1 = self.url + '/web/image?' + 'model=product.template&id=' + str(id) + '&field=image_1920'
+                        j['image'] = image_url1
                     alternative.append(alternative_product[0])
             for variant in i['product_variant_ids']:
                 values= []
@@ -509,7 +515,7 @@ class Product(http.Controller):
                             'image' : im_url
                         })
                         images = False
-            image_url = self.url + '/web/image?' + 'model=product.template&id=' + str(product_id) + '&field=image_1920'
+            image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
             i['image'] = image_url
             categ_id = i['categ_id'][0]
             im.append({
