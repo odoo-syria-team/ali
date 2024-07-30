@@ -86,72 +86,70 @@ class Auth(http.Controller):
     @http.route('/auth/register',  auth="public",csrf=False, website=True, methods=['POST'])
     def register(self,idd= None, **kw):      
         
-        response = ''  
-        body =json.loads(request.httprequest.data)
-        username = body['full_name']
-        password = body['password']
-        confirm_password = body['confirm_password']
-        email = body['email']
-        email = email.lower()
-        phone = body['phone']
-        
-        username_validation = self._validation(username)
-        # password_validation = self._pass_validate(password)
-        email_validation = self.check_email(email)
-        if confirm_password != password:
-            response = json.dumps({"data":[],'message': 'Make sure your passwor and confirm password are the same'})
-            return Response(
-            response, status=422,
-            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-        )
-        if username_validation == False:
-            response = json.dumps({"data":[],'message': 'Please add your name'})
-            return Response(
-            response, status=422,
-            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-        )
-
-        if email_validation == False:
-            response = json.dumps({"data":[],'message': 'Please insert valid e-mail'})
-            return Response(
-            response, status=422,
-            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-        )
-    
-        uid = False
+        authe = request.httprequest.headers
         common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
-        if not uid:
-            
-            uid = common.authenticate(self.db,self.username, self.password, {})
-            
-       
-       
-        is_there= models.execute_kw(self.db, uid, self.password, 'res.users', 'search_count', [[['login', '=', email]]])
+        uid = common.authenticate(self.db, self.username, self.password, {})
+        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))  
+        fields = {}
         
-        if is_there != 0:
-            response = json.dumps({"data":[],'message': 'This email was used'})
-            return Response(
-            response, status=422,
-            headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-        )
-        else :
+        date_now = str(datetime.today())
+        body = json.loads(request.httprequest.data)
 
-            user_id = models.execute_kw(self.db, uid, self.password, 'res.users', 'create', [{'name': username, 'password' : password,'phone' : phone, 'login' :email ,'groups_id': [(6, 0, [models.execute_kw(self.db, uid, self.password, 'res.groups', 'search', [[('name', '=', 'Portal')]])[0]])] }])
-           
-            if user_id :
-                date_now = str(datetime.today())
-                key = self.generate_random_key()
-                user_token = models.execute_kw(self.db, uid, self.password, 'x_user_token', 'create', [{'x_name' :key,'x_studio_user_name': user_id, 'x_studio_user_token' : key  }])
-                user_details = {"id":user_id,"username" :username,"email":email,"phone" :phone ,"timestamp":date_now}
-                
-                
-              
-                response=json.dumps({"data":{"user":user_details,'token' :key}})
-                return Response(
-                response, status=200,
-                headers=[('Content-Type', 'application/json'),('accept','application/json'), ('Content-Length', 100)]
-            )
+        # Populate fields based on the incoming request data
+        if 'name' in body:
+            fields['name'] = body['name']
+
+        if 'phone' in body:
+            fields['phone'] = body['phone']
+
+        if 'email' in body:
+            fields['email'] = body['email']
+        
+        if 'salutation' in body:
+            fields['x_studio_salutation'] = body['salutation']
+
+        if 'company' in body:
+            fields['company_name'] = body['company']
+
+        if 'country_id' in body:
+            fields['country_id'] = body['country_id']
+
+        if 'address' in body:
+            fields['street'] = body['address']
+
+        if 'post_code' in body:
+            fields['x_studio_post_code'] = body['post_code']
+
+        if 'find_us' in body:
+            fields['x_studio_find_us'] = body['find_us']
+
+        # Create a new partner contact
+        partner_id = models.execute_kw(self.db, uid, self.password, 'res.partner', 'create', [fields])
+
+        # Fetch user details
+        log_note = {
+            'model': 'res.partner',
+            'res_id': partner_id,
+            # 'message_type': 'comment',
+            'body': f"Other Information:\n"
+                    f"_____________\n"
+                    f"Company Name: {body.get('company', 'Hide')}\n"
+                    f"Username: {body.get('name', 'Ali Ammar')}\n"
+                    f"Password: {body.get('password', 'asdqwe123')}\n"
+                    f"Confirm Password: {body.get('confirm_password', 'asdqwe123')}\n"
+                    f"Salutation: {body.get('salutation', 'Mr')}\n"
+                    f"Last Name: {body.get('last_name', 'Ammar')}\n"
+                    f"Address: {body.get('address', '4557 De Silva St')}\n"
+                    f"How did you find us: {body.get('find_us', 'Facebook')}\n"
+                    f"Following the New GDPR Law put in place with regards to Data Protection. By filling out the above form you agree to us contacting you with marketing materials through all communication. Untick the box if you prefer not to receive the G-tec newsletter (communication regarding our products, services and events). By subscribing you agree to our Privacy Policy. *: Yes",
+            'author_id': uid,
+        }
+        log_note_id = models.execute_kw(self.db, uid, self.password, 'mail.message', 'create', [log_note])
+        user_details = models.execute_kw(self.db, uid, self.password, 'res.partner', 'read', [partner_id], {'fields': ['name', 'phone', 'email']})
+
+        # Prepare response
+        response = json.dumps({'data': user_details, 'message': 'تم إنشاء جهة اتصال جديدة'})
+        return Response(response, status=200, headers=[('Content-Type', 'application/json'), ('Content-Length', '100')])
 
     @http.route('/auth/log_in', auth="public",csrf=False, website=True, methods=['POST'])
     def log_in(self,idd= None, **kw):               

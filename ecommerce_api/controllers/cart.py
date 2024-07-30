@@ -298,8 +298,8 @@ class Cart(http.Controller):
             user_quot = models.execute_kw(self.db, uid, self.password, 'sale.order', 'search_read', [['&',['state' ,'=' ,'draft'],['partner_id' , '=' , user_partner]]],{'fields':['id' , 'amount_total','amount_tax','amount_paid']})
             
             if user_quot:
-                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
-                result = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'unlink', [[id]])
+                user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [['&' ,[ 'order_id' , '=' , int(user_quot[0]['id']) ], ['product_id' , '=' , int(id)]]],{'fields':['id','name' ,'product_uom_qty','product_uom','price_unit','product_id']})
+                result = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'unlink', [[user_carts[0]['id']]])
                 user_carts = models.execute_kw(self.db, uid, self.password, 'sale.order.line', 'search_read', [[['order_id' , '=' , int(user_quot[0]['id'])]]],{'fields':['id','name' ,'product_uom_qty','price_unit','product_id']})
                 for i in user_carts:
                     product_id = i['product_id'][0]
