@@ -133,13 +133,15 @@ class Auth(http.Controller):
             # 'message_type': 'comment',
             'body': f"Other Information:\n"
                     f"_____________\n"
-                    f"Company Name: {body.get('company', 'Hide')}\n"
-                    f"Username: {body.get('name', 'Ali Ammar')}\n"
-                    f"Password: {body.get('password', 'asdqwe123')}\n"
-                    f"Confirm Password: {body.get('confirm_password', 'asdqwe123')}\n"
+                    f"Company Name: {body.get('company')}\n"
+                    f"Username: {body.get('name', '')}\n"
+                    f"First_name: {body.get('forst_name', '')}\n"
+                    f"Password: {body.get('password', '')}\n"
+                    f"Confirm Password: {body.get('confirm_password', '')}\n"
                     f"Salutation: {body.get('salutation', 'Mr')}\n"
-                    f"Last Name: {body.get('last_name', 'Ammar')}\n"
-                    f"Address: {body.get('address', '4557 De Silva St')}\n"
+                    f"Last Name: {body.get('last_name', '')}\n"
+                    f"Address: {body.get('address', '')}\n"
+                    f"VAT: {body.get('vat', '')}\n"
                     f"How did you find us: {body.get('find_us', 'Facebook')}\n"
                     f"Following the New GDPR Law put in place with regards to Data Protection. By filling out the above form you agree to us contacting you with marketing materials through all communication. Untick the box if you prefer not to receive the G-tec newsletter (communication regarding our products, services and events). By subscribing you agree to our Privacy Policy. *: Yes",
             'author_id': uid,

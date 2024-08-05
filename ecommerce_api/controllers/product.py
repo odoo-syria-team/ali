@@ -420,7 +420,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.product', 'search_read',
                 [[['product_tmpl_id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications','product_variant_ids'], 'limit': 1}
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_video' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications','product_variant_ids'], 'limit': 1}
             )
             user_id = int(valid_token[0]['x_studio_user_name'][0])
             user_partner = models.execute_kw(
@@ -445,7 +445,7 @@ class Product(http.Controller):
             products = models.execute_kw(
                 self.db, uid, self.password, 'product.product', 'search_read',
                 [[['product_tmpl_id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'product_variant_ids'],'limit': 1}
+                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_why_and_when', 'x_studio_video' ,'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'product_variant_ids'],'limit': 1}
             )
 
         x = 0
