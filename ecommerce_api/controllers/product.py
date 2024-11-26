@@ -423,6 +423,11 @@ class Product(http.Controller):
                     response, status=401,
                     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
+            response = json.dumps({'data': valid_token[0]['x_studio_user_name'][0]})
+            return Response(
+                response, status=401,
+                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+            )
             if valid_token:
                 products = models.execute_kw(
                     self.db, uid, self.password, 'product.product', 'search_read',
