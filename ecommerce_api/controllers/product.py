@@ -432,16 +432,10 @@ class Product(http.Controller):
                 )
                 user_product_pricelist_id = user_partner[0]['property_product_pricelist'][0]
                 user_partner = user_partner[0]['partner_id'][0]
-    
                 product_price_list = models.execute_kw(
                     self.db, uid, self.password, 'product.pricelist.item', 'search_read',
                     [[['pricelist_id', '=', user_product_pricelist_id]]],
                     {'fields': ['product_tmpl_id', 'fixed_price']}
-                )
-                response = json.dumps({'products': str(products), 'product_price_list': str(product_price_list)})
-                return Response(
-                    response, status=401,
-                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
                 for product in products:
                     for prod in product_price_list:
