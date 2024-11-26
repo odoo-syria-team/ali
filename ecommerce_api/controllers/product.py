@@ -442,12 +442,6 @@ class Product(http.Controller):
                     [[['pricelist_id', '=', user_product_pricelist_id]]],
                     {'fields': ['product_tmpl_id', 'fixed_price']}
                 )
-    
-                response = json.dumps({'data': valid_token[0]['x_studio_user_name'][0]})
-                return Response(
-                    response, status=401,
-                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-                )
                 for product in products:
                     for prod in product_price_list:
                         print('prod >>> ' , prod)
