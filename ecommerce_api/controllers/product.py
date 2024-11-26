@@ -390,11 +390,7 @@ class Product(http.Controller):
     def get_product_by_id(self, product_id, page=int(1), **kw):
         try:
             response = ''
-            response = json.dumps({'data':'authe'})
-            return Response(
-                response, status=400,
-                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-            )
+            
             print('product_id >>> ' , product_id)
             valid_token = False
             page = int(page)
@@ -408,7 +404,11 @@ class Product(http.Controller):
             uid = common.authenticate(self.db, self.username, self.password, {})
     
             try:
-                
+                # response = json.dumps({'data':authe})
+                # return Response(
+                #     response, status=400,
+                #     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                # )
                 if authe and 'Authorization' in authe:
                     token = authe['Authorization'].replace('Bearer ', '')
                     valid_token = models.execute_kw(
