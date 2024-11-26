@@ -398,16 +398,17 @@ class Product(http.Controller):
                 page = int(1)
     
             authe = request.httprequest.headers
+            response = json.dumps({'data':{'authe': authe}})
+                return Response(
+                    response, status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
             common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
             models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
             uid = common.authenticate(self.db, self.username, self.password, {})
     
             try:
-                response = json.dumps({'data':{'authe': authe}})
-                return Response(
-                    response, status=401,
-                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-                )
+                
                 if authe and 'Authorization' in authe:
                     token = authe['Authorization'].replace('Bearer ', '')
                     valid_token = models.execute_kw(
