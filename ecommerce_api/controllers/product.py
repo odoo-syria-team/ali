@@ -418,8 +418,7 @@ class Product(http.Controller):
                     response, status=401,
                     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
-            response = json.dumps({'data': valid_token[0]['x_studio_user_name'][0]})
-            
+                
             if valid_token:
                 products = models.execute_kw(
                     self.db, uid, self.password, 'product.product', 'search_read',
@@ -438,6 +437,11 @@ class Product(http.Controller):
                     self.db, uid, self.password, 'product.pricelist.item', 'search_read',
                     [[['pricelist_id', '=', user_product_pricelist_id]]],
                     {'fields': ['product_tmpl_id', 'fixed_price']}
+                )
+                response = json.dumps({'products': str(products), 'product_price_list': str(product_price_list)})
+                return Response(
+                    response, status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
                 for product in products:
                     for prod in product_price_list:
