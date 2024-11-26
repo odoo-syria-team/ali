@@ -404,11 +404,6 @@ class Product(http.Controller):
             uid = common.authenticate(self.db, self.username, self.password, {})
     
             try:
-                # response = json.dumps({'data':authe})
-                # return Response(
-                #     response, status=400,
-                #     headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-                # )
                 if authe and 'Authorization' in authe:
                     token = authe['Authorization'].replace('Bearer ', '')
                     valid_token = models.execute_kw(
@@ -448,6 +443,11 @@ class Product(http.Controller):
                     {'fields': ['product_tmpl_id', 'fixed_price']}
                 )
     
+                response = json.dumps({'data': valid_token[0]['x_studio_user_name'][0]})
+                return Response(
+                    response, status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
+                )
                 for product in products:
                     for prod in product_price_list:
                         print('prod >>> ' , prod)
