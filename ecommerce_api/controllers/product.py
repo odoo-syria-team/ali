@@ -388,164 +388,168 @@ class Product(http.Controller):
 
     @http.route('/product/<int:product_id>', auth="public", csrf=False, website=True, methods=['GET'])
     def get_product_by_id(self, product_id, page=int(1), **kw):
-        response = ''
-        print('product_id >>> ' , product_id)
-        valid_token = False
-        page = int(page)
-
-        if page is None:
-            page = int(1)
-
-        authe = request.httprequest.headers
-        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
-        models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
-        uid = common.authenticate(self.db, self.username, self.password, {})
-
         try:
-            if authe and 'Authorization' in authe:
-                token = authe['Authorization'].replace('Bearer ', '')
-                valid_token = models.execute_kw(
-                    self.db, uid, self.password, 'x_user_token', 'search_read', 
-                    [[['x_studio_user_token', '=', token]]], {'fields': ['x_studio_user_name']}
+            response = ''
+            print('product_id >>> ' , product_id)
+            valid_token = False
+            page = int(page)
+    
+            if page is None:
+                page = int(1)
+    
+            authe = request.httprequest.headers
+            common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
+            models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+            uid = common.authenticate(self.db, self.username, self.password, {})
+    
+            try:
+                if authe and 'Authorization' in authe:
+                    token = authe['Authorization'].replace('Bearer ', '')
+                    valid_token = models.execute_kw(
+                        self.db, uid, self.password, 'x_user_token', 'search_read', 
+                        [[['x_studio_user_token', '=', token]]], {'fields': ['x_studio_user_name']}
+                    )
+                else:
+                        valid_token = False
+            except Exception as e:
+                response = json.dumps({'data': 'no data', 'message': str(e)})
+                return Response(
+                    response, status=401,
+                    headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
                 )
+            if valid_token:
+                products = models.execute_kw(
+                    self.db, uid, self.password, 'product.product', 'search_read',
+                    [[['product_tmpl_id', '=', product_id]]],
+                    {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_video' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications','product_variant_ids'], 'limit': 1}
+                )
+                user_id = int(valid_token[0]['x_studio_user_name'][0])
+                user_partner = models.execute_kw(
+                    self.db, uid, self.password, 'res.users', 'search_read',
+                    [[['id', '=', user_id]]], {'fields': ['partner_id', 'property_product_pricelist']}
+                )
+                user_product_pricelist_id = user_partner[0]['property_product_pricelist'][0]
+                user_partner = user_partner[0]['partner_id'][0]
+    
+                product_price_list = models.execute_kw(
+                    self.db, uid, self.password, 'product.pricelist.item', 'search_read',
+                    [[['pricelist_id', '=', user_product_pricelist_id]]],
+                    {'fields': ['product_tmpl_id', 'fixed_price']}
+                )
+    
+                for product in products:
+                    for prod in product_price_list:
+                        print('prod >>> ' , prod)
+                        if product['id'] == prod['product_tmpl_id'][0]:
+                            product['list_price'] = prod['fixed_price']
             else:
-                    valid_token = False
-        except Exception as e:
-            response = json.dumps({'data': 'no data', 'message': str(e)})
-            return Response(
-                response, status=401,
-                headers=[('Content-Type', 'application/json'), ('Content-Length', 100)]
-            )
-        if valid_token:
-            products = models.execute_kw(
-                self.db, uid, self.password, 'product.product', 'search_read',
-                [[['product_tmpl_id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id', 'list_price','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_video' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications','product_variant_ids'], 'limit': 1}
-            )
-            user_id = int(valid_token[0]['x_studio_user_name'][0])
-            user_partner = models.execute_kw(
-                self.db, uid, self.password, 'res.users', 'search_read',
-                [[['id', '=', user_id]]], {'fields': ['partner_id', 'property_product_pricelist']}
-            )
-            user_product_pricelist_id = user_partner[0]['property_product_pricelist'][0]
-            user_partner = user_partner[0]['partner_id'][0]
-
-            product_price_list = models.execute_kw(
-                self.db, uid, self.password, 'product.pricelist.item', 'search_read',
-                [[['pricelist_id', '=', user_product_pricelist_id]]],
-                {'fields': ['product_tmpl_id', 'fixed_price']}
-            )
-
-            for product in products:
-                for prod in product_price_list:
-                    print('prod >>> ' , prod)
-                    if product['id'] == prod['product_tmpl_id'][0]:
-                        product['list_price'] = prod['fixed_price']
-        else:
-            products = models.execute_kw(
-                self.db, uid, self.password, 'product.product', 'search_read',
-                [[['product_tmpl_id', '=', product_id]]],
-                {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_why_and_when', 'x_studio_video' ,'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'product_variant_ids'],'limit': 1}
-            )
-
-        x = 0
-        im = []
-        values= []
-        varient = []
-        alternative = []
-        for i in products:
-            product_id = i['id']
-            print('products >>> ' , products)
-            print("i['accessory_product_ids']  >>> " , i['accessory_product_ids'])
-            for alternative_ids in i['accessory_product_ids']:
-                print('alternative_ids >>>>>> ' , alternative_ids)
-                alternative_product = models.execute_kw(
-                self.db, uid, self.password, 'product.product', 'search_read',
-                [[['id', '=', int(alternative_ids)]]],
-                {'fields': ['id','product_tmpl_id' , 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'attribute_line_ids'], 'offset': (page - 1) * 5,
-                'limit': 5}
-            )
-                if alternative_product:
-                    for j in alternative_product:
-                        id = 0
-                        id = j['product_tmpl_id'][0]
-                        j['id'] = id
-                        del j['product_tmpl_id']
-                        image_url1 = self.url + '/web/image?' + 'model=product.template&id=' + str(id) + '&field=image_1920'
-                        j['image'] = image_url1
-                    alternative.append(alternative_product[0])
-            for variant in i['product_variant_ids']:
-                values= []
-                print('variant >>>> ' , variant)
-                # xs = models.execute_kw(
-                # self.db, uid, self.password, 'product.product', 'search_read',
-                # [[['id', '=', variant]]],
-                # {'fields': ['id', 'product_variant_ids', 'name']})
-                # print("xs[0]['product_variant_ids'] >>> " , xs[0]['product_variant_ids'])
-                x2 = models.execute_kw(
-                self.db, uid, self.password, 'product.product', 'search_read',
-                [[['id', '=', variant]]],
-                {'fields': ['id', 'name' ,'lst_price', 'valid_product_template_attribute_line_ids' , 'attribute_line_ids' ,'product_template_variant_value_ids' ]})
-                print('asd >>>>> ' ,x2)
-                x3 = models.execute_kw(
-                self.db, uid, self.password, 'product.template.attribute.value', 'search_read',
-                [[['id', 'in', x2[0]['product_template_variant_value_ids']]]],
-                {'fields': ['id', 'name' , 'attribute_id' , 'attribute_line_id' , 'display_name' , 'product_attribute_value_id' , ]})
-                if x2 and x3 : 
-                    varient.append({
-                            'id' : x2[0]['id'],
-                            'key' : x3[0]['attribute_id'][1],
-                            'values' : x3[0]['name'],
-                            'price' : x2[0]['lst_price'],
-                        })
-
-                print('asd >>>>> ' ,x2)
-                print('asd >>>>> ' ,x3)
-            if i['product_template_image_ids']:
-                for item in i['product_template_image_ids']:
-                    images = models.execute_kw(
-                    self.db, uid, self.password, 'product.image', 'search_read',
-                    [[['id', '=', item]]],
-                    {'fields': ['id','image_1920' ]}
+                products = models.execute_kw(
+                    self.db, uid, self.password, 'product.product', 'search_read',
+                    [[['product_tmpl_id', '=', product_id]]],
+                    {'fields': ['id', 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','accessory_product_ids','x_studio_specifications' ,'x_studio_why_and_when', 'x_studio_video' ,'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'product_variant_ids'],'limit': 1}
                 )
-                    if images:
-                        im_url = self.url + '/web/image?' + 'model=product.image&id=' + str(item) + '&field=image_1920'
-                        im.append({
-                            'id' : images[0]['id'],
-                            'image' : im_url
-                        })
-                        images = False
-            image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
-            i['image'] = image_url
-            categ_id = i['categ_id'][0]
-            im.append({
-                'id': 0 ,
-                'image' : image_url}
-            )
-            categ_name = i['categ_id'][1]
-            products[x]['categ_name'] = categ_name
-            products[x]['categ_id'] = categ_id
-            products[x]['images_catalog']  = im
-            products[x]['varient']  =varient
-            products[x]['alternative']  =alternative
-            products[x]['list_price'] = products[x]['list_price'] if valid_token else None
+    
+            x = 0
             im = []
-            x += 1
-
-        try:
-            response = json.dumps({"data": {'product': products[0]}, 'message': 'Product Details '})
-            return Response(
-                response, status=200,
-                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
-            )
-
-        except:
-            response = json.dumps({"data": [], 'message': 'No products for this ID'})
-            return Response(
-                response, status=404,
-                headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
-            )
-
+            values= []
+            varient = []
+            alternative = []
+            for i in products:
+                product_id = i['id']
+                print('products >>> ' , products)
+                print("i['accessory_product_ids']  >>> " , i['accessory_product_ids'])
+                for alternative_ids in i['accessory_product_ids']:
+                    print('alternative_ids >>>>>> ' , alternative_ids)
+                    alternative_product = models.execute_kw(
+                    self.db, uid, self.password, 'product.product', 'search_read',
+                    [[['id', '=', int(alternative_ids)]]],
+                    {'fields': ['id','product_tmpl_id' , 'name', 'type', 'uom_name', 'cost_currency_id', 'categ_id','description_sale','x_studio_specifications' ,'x_studio_why_and_when', 'product_template_image_ids','x_studio_product_feature_mobile','tax_string' , 'x_studio_pdf_link' , 'x_studio_breif' , 'x_studio_why_and_when' , 'x_studio_specifications' , 'attribute_line_ids'], 'offset': (page - 1) * 5,
+                    'limit': 5}
+                )
+                    if alternative_product:
+                        for j in alternative_product:
+                            id = 0
+                            id = j['product_tmpl_id'][0]
+                            j['id'] = id
+                            del j['product_tmpl_id']
+                            image_url1 = self.url + '/web/image?' + 'model=product.template&id=' + str(id) + '&field=image_1920'
+                            j['image'] = image_url1
+                        alternative.append(alternative_product[0])
+                for variant in i['product_variant_ids']:
+                    values= []
+                    print('variant >>>> ' , variant)
+                    # xs = models.execute_kw(
+                    # self.db, uid, self.password, 'product.product', 'search_read',
+                    # [[['id', '=', variant]]],
+                    # {'fields': ['id', 'product_variant_ids', 'name']})
+                    # print("xs[0]['product_variant_ids'] >>> " , xs[0]['product_variant_ids'])
+                    x2 = models.execute_kw(
+                    self.db, uid, self.password, 'product.product', 'search_read',
+                    [[['id', '=', variant]]],
+                    {'fields': ['id', 'name' ,'lst_price', 'valid_product_template_attribute_line_ids' , 'attribute_line_ids' ,'product_template_variant_value_ids' ]})
+                    print('asd >>>>> ' ,x2)
+                    x3 = models.execute_kw(
+                    self.db, uid, self.password, 'product.template.attribute.value', 'search_read',
+                    [[['id', 'in', x2[0]['product_template_variant_value_ids']]]],
+                    {'fields': ['id', 'name' , 'attribute_id' , 'attribute_line_id' , 'display_name' , 'product_attribute_value_id' , ]})
+                    if x2 and x3 : 
+                        varient.append({
+                                'id' : x2[0]['id'],
+                                'key' : x3[0]['attribute_id'][1],
+                                'values' : x3[0]['name'],
+                                'price' : x2[0]['lst_price'],
+                            })
+    
+                    print('asd >>>>> ' ,x2)
+                    print('asd >>>>> ' ,x3)
+                if i['product_template_image_ids']:
+                    for item in i['product_template_image_ids']:
+                        images = models.execute_kw(
+                        self.db, uid, self.password, 'product.image', 'search_read',
+                        [[['id', '=', item]]],
+                        {'fields': ['id','image_1920' ]}
+                    )
+                        if images:
+                            im_url = self.url + '/web/image?' + 'model=product.image&id=' + str(item) + '&field=image_1920'
+                            im.append({
+                                'id' : images[0]['id'],
+                                'image' : im_url
+                            })
+                            images = False
+                image_url = self.url + '/web/image?' + 'model=product.product&id=' + str(product_id) + '&field=image_1920'
+                i['image'] = image_url
+                categ_id = i['categ_id'][0]
+                im.append({
+                    'id': 0 ,
+                    'image' : image_url}
+                )
+                categ_name = i['categ_id'][1]
+                products[x]['categ_name'] = categ_name
+                products[x]['categ_id'] = categ_id
+                products[x]['images_catalog']  = im
+                products[x]['varient']  =varient
+                products[x]['alternative']  =alternative
+                products[x]['list_price'] = products[x]['list_price'] if valid_token else None
+                im = []
+                x += 1
+    
+            try:
+                response = json.dumps({"data": {'product': products[0]}, 'message': 'Product Details '})
+                return Response(
+                    response, status=200,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+                )
+    
+            except:
+                response = json.dumps({"data": [], 'message': 'No products for this ID'})
+                return Response(
+                    response, status=404,
+                    headers=[('Content-Type', 'application/json'), ('accept', 'application/json'), ('Content-Length', 100)]
+                )
+        except Exception as e:
+            request.env.cr.rollback()
+            response = json.dumps({'message': str(e)})
+            return Response(response, status=500, headers=[('Content-Type', 'application/json')])
 
     @http.route('/shipping/all',  auth="public",csrf=False, website=True, methods=['GET'])
     def get_all_shipping_methods(self, **kw):
