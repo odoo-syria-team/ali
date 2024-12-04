@@ -23,22 +23,21 @@ class Home(http.Controller):
             banner_ids = models.execute_kw(self.db, uid, self.password, 'x_slider_gtec', 'search_read',
                                            [[['id', '!=', 0]]], {'fields': ['id']})
             for banner_id in banner_ids:
-                banners_id = banner_id['id']
+                banners = banner_id['id']
                 image_url = self.url + '/web/image?' + 'model=x_slider_gtec&id=' + str(
-                    banners_id) + '&field=x_studio_binary_field_64g_1hi0esu21'
+                    banners) + '&field=x_studio_binary_field_64g_1hi0esu21'
                 banner_id['image'] = image_url
 
             category_ids = models.execute_kw(self.db, uid, self.password, 'product.public.category', 'search_read',
                                              [[['parent_id', '=', False]]],
                                              {'fields': ['id', 'name', 'sequence', 'x_studio_brand']})
             for category_id in category_ids:
-                category_id = category_id['id']
-                category_id['image'] = self.url + '/web/image?' + 'model=product.public.category&id=' + str(
-                    category_id) + '&field=image_1920'
+                category = category_id['id']
+                category_id['image'] = self.url + '/web/image?' + 'model=product.public.category&id=' + str(category) + '&field=image_1920'
 
                 sub_category_ids = models.execute_kw(
                     self.db, uid, self.password, 'product.public.category', 'search',
-                    [[['parent_id', '=', category_id]]]
+                    [[['parent_id', '=', category]]]
                 )
 
                 if sub_category_ids:
@@ -124,7 +123,7 @@ class Home(http.Controller):
             )
 
         except Exception as e:
-
+        
             response = json.dumps({'message': str(e)})
-
+        
             return Response(response, status=500, headers=[('Content-Type', 'application/json')])
